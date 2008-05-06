@@ -1,0 +1,2 @@
+# $Id$
+http\://ry1.org/schema/routes=org.ry1.springframework.web.routes.xml.RoutesNamespaceHandler
