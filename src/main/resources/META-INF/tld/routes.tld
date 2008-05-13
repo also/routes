@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- $Id: routes.tld 144 2008-04-08 03:08:14Z rberdeen $ -->
+
+<taglib xmlns="http://java.sun.com/xml/ns/j2ee"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://java.sun.com/xml/ns/j2ee http://java.sun.com/xml/ns/j2ee/web-jsptaglibrary_2_0.xsd"
+	version="2.0">
+	
+	<tlib-version>1.0</tlib-version>
+	<short-name>routes</short-name>
+	<uri>http://ry1.org/tags/routes</uri>
+
+	<tag>
+		<name>url</name>
+		<tag-class>org.ry1.springframework.web.routes.tags.UrlTag</tag-class>
+		<body-content>empty</body-content>
+		<dynamic-attributes>true</dynamic-attributes>
+	</tag>
+
+	<tag>
+		<name>a</name>
+		<tag-class>org.ry1.springframework.web.routes.tags.AnchorTag</tag-class>
+		<body-content>scriptless</body-content>
+		<dynamic-attributes>true</dynamic-attributes>
+	</tag>
+</taglib>
