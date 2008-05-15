@@ -187,7 +187,6 @@ public class DefaultRoute {
 			
 			regexBuilder.append('$');
 			regex = Pattern.compile(regexBuilder.toString());
-			System.out.println(regex);
 		}
 		
 		return regex;
