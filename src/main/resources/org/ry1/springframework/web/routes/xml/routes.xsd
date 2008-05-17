@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- $Id: routes.xsd 157 2008-04-19 08:55:09Z rberdeen $ -->
+
+<xsd:schema xmlns="http://ry1.org/schema/routes"
+	xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+	xmlns:beans="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	targetNamespace="http://ry1.org/schema/routes"
+	elementFormDefault="qualified" attributeFormDefault="unqualified"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-2.0.xsd">
+
+	<xsd:import namespace="http://www.springframework.org/schema/beans" />
+
+	<xsd:element name="connect">
+		<xsd:complexType>
+			<xsd:simpleContent>
+				<xsd:extension base="xsd:string">
+					<xsd:anyAttribute processContents="skip"></xsd:anyAttribute>
+				</xsd:extension>
+			</xsd:simpleContent>
+		</xsd:complexType>
+	</xsd:element>
+	
+	<xsd:element name="resource">
+		<xsd:complexType>
+			<xsd:attribute name="class" use="required"/>
+		</xsd:complexType>
+	</xsd:element>
+
+</xsd:schema>
