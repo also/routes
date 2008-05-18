@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<!-- $Id: routes.xsd 157 2008-04-19 08:55:09Z rberdeen $ -->
+<!-- $Id$ -->
 
 <xsd:schema xmlns="http://ry1.org/schema/routes"
 	xmlns:xsd="http://www.w3.org/2001/XMLSchema"
@@ -10,21 +10,51 @@
 	elementFormDefault="qualified" attributeFormDefault="unqualified"
 	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-2.0.xsd">
 
-	<xsd:import namespace="http://www.springframework.org/schema/beans" />
+	<xsd:import namespace="http://www.springframework.org/schema/beans" schemaLocation="http://www.springframework.org/schema/beans/spring-beans-2.0.xsd"/>
 
-	<xsd:element name="connect">
+	<xsd:element name="routes" type="routesType"/>
+	
+	<xsd:complexType name="routesType">
+		<xsd:complexContent>
+			<xsd:extension base="beans:identifiedType">
+				<xsd:choice maxOccurs="unbounded">
+					<xsd:element ref="with"/>
+					<xsd:element ref="connect"/>
+					<xsd:element ref="resource"/>
+				</xsd:choice>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	
+	
+	<xsd:element name="with">
 		<xsd:complexType>
-			<xsd:simpleContent>
-				<xsd:extension base="xsd:string">
-					<xsd:anyAttribute processContents="skip"></xsd:anyAttribute>
+			<xsd:complexContent>
+				<xsd:extension base="routesType">
+					<xsd:anyAttribute processContents="skip"/>
 				</xsd:extension>
-			</xsd:simpleContent>
+			</xsd:complexContent>
 		</xsd:complexType>
 	</xsd:element>
 	
+	
+	<xsd:complexType name="connectType">
+		<xsd:simpleContent>
+			<xsd:extension base="xsd:string">
+				<xsd:anyAttribute processContents="skip"/>
+			</xsd:extension>
+		</xsd:simpleContent>
+	</xsd:complexType>
+	
+	<xsd:element name="connect" type="connectType"/>
+	
 	<xsd:element name="resource">
 		<xsd:complexType>
-			<xsd:attribute name="class" use="required"/>
+			<xsd:simpleContent>
+				<xsd:extension base="connectType">
+					<xsd:anyAttribute processContents="skip"/>
+				</xsd:extension>
+			</xsd:simpleContent>
 		</xsd:complexType>
 	</xsd:element>
 
