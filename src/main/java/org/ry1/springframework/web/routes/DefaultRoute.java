@@ -6,204 +6,124 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import javax.servlet.http.HttpServletRequest;
 
 public class DefaultRoute {
-	private static final char[] PATTERN_SPECIAL_CHARS = ".\\+*?[^]$(){}=!<>|:".toCharArray();
-	private static final String VALUE_WITHOUT_SLASHES = "([^/]+)";
-	private static final String VALUE_WITH_SLASHES = "(.+)";
-	private static final char PARAMETER_WITHOUT_SLASHES_PREFIX = ':';
-	private static final char PARAMETER_WITH_SLASHES_PREFIX = '*';
 	private String name;
 	private String pattern;
-	private Pattern regex;
 	private boolean hasUrlParameter;
-	private ArrayList<UrlParameter> urlParameters;
-	
+
 	/** The parameters that are required to generate a URL for this route. */
 	private ArrayList<String> requiredParameters;
+	private Map<String, String> parameters;
 	private HashMap<String, Object> defaultParameters;
-	private Map<String, String> staticParameters;
+	private HashMap<String, String> staticParameters;
 	private Set<String> methods;
 	private Set<String> excludedMethods;
+	private UrlPattern urlPattern;
 
-	private DefaultRoute() {
-		staticParameters = new HashMap<String, String>();
-		
-		defaultParameters = new HashMap<String, Object>();
-		requiredParameters = new ArrayList<String>();
-		urlParameters = new ArrayList<UrlParameter>();
+	public DefaultRoute() {
+
 	}
-	
+
 	/** Creates a new unnamed route.
 	 * @param pattern the pattern the route will match
-	 * @param staticParameters the parameters that will always be applied
+	 * @param parameters the parameters that will be applied
 	 */
-	public DefaultRoute(String pattern, Map<String, String> staticParameters) {
-		this(pattern, staticParameters, null);
+	public DefaultRoute(String pattern, Map<String, String> parameters) {
+		this(pattern, parameters, null);
 	}
-	
+
 	/** Creates a new named route.
 	 * @param pattern the pattern the route will match
-	 * @param staticParameters the parameters that will always be applied
+	 * @param parameters the parameters that will be applied
 	 * @param name the name of the route
 	 */
-	public DefaultRoute(String pattern, Map<String, String> staticParameters, String name) {
-		this(pattern, staticParameters, name, null, null);
+	public DefaultRoute(String pattern, Map<String, String> parameters, String name) {
+		this(pattern, parameters, name, null, null);
 	}
-	
-	public DefaultRoute(String pattern, Map<String, String> staticParameters, String name, Set<String> methods, Set<String> excludedMethods) {
-		this();
-		
+
+	public DefaultRoute(String pattern, Map<String, String> parameters, String name, Set<String> methods, Set<String> excludedMethods) {
+		this(UrlPattern.parse(pattern, parameters.keySet()), parameters, name, methods, excludedMethods);
+
 		this.pattern = pattern;
-		
-		// clone the static parameters
-		if (staticParameters != null) {
-			this.staticParameters.putAll(staticParameters);
-		}
-		
+	}
+
+	public DefaultRoute(UrlPattern urlPattern, Map<String, String> parameters, String name, Set<String> methods, Set<String> excludedMethods) {
+		this.urlPattern = urlPattern;
+
+		this.parameters = parameters;
+
 		this.name = name;
-		
+
 		// if methods are empty, set to null
 		this.methods = methods != null && methods.size() > 0 ? methods : null;
 		this.excludedMethods = excludedMethods != null && excludedMethods.size() > 0 ? excludedMethods : null;
-		
-		boolean requireNameStart = false;
-		StringBuilder nameBuilder = null;
-		boolean allowSlashes = false;
-		StringBuilder urlPartBuilder = new StringBuilder();
-		
-		for (int i = 0, len = pattern.length(); i < len; ++i) {
-			char c = pattern.charAt(i);
-			if (nameBuilder != null) {
-				if (isValidNameChar(c)) {
-					nameBuilder.append(c);
-				}
-				else {
-					addParameterName(urlPartBuilder, nameBuilder, allowSlashes);
-					urlPartBuilder = new StringBuilder();
-					nameBuilder = null;
-					
-					//
-					--i;
-				}
-			}
-			else if (c == PARAMETER_WITHOUT_SLASHES_PREFIX) {
-				allowSlashes = false;
-				requireNameStart = true;
-			}
-			else if (c == PARAMETER_WITH_SLASHES_PREFIX) {
-				allowSlashes = true;
-				requireNameStart = true;
-			}
-			else {
-				urlPartBuilder.append(c);
-			}
-			
-			// peek ahead at the next name character and make sure there can be a valid name
-			if (requireNameStart) {
-				if (i == len - 1) {
-					throw new IllegalArgumentException("Invalid pattern: expecting name, found end of pattern");
-				}
-				else {
-					char d = pattern.charAt(i + 1);
-					if (!isValidNameChar(d)) {
-						throw new IllegalArgumentException("Invalid pattern: expecting name, found '" + pattern.substring(i + 1) + "' at index " + i);
-					}
-					else {
-						hasUrlParameter = true;
-						requireNameStart = false;
-						nameBuilder = new StringBuilder();
-						nameBuilder.append(d);
-						++i;
-					}
-				}
-			}
-		}
-		
-		addParameterName(urlPartBuilder, nameBuilder, allowSlashes);
-	}
-	
-	private void addParameterName(StringBuilder urlPartBuilder, StringBuilder parameterNameBuilder, boolean allowSlashes) {
-		boolean required = false;
 
-		String parameterName = null;
-		if (parameterNameBuilder != null) {
-			parameterName = parameterNameBuilder.toString();
-			
-			if (staticParameters.containsKey(parameterName)) {
-				defaultParameters.put(parameterName, staticParameters.remove(parameterName));
-			}
-			else {
-				requiredParameters.add(parameterName);
-				required = true;
-			}
-		}
-		
-		urlParameters.add(new UrlParameter(required, allowSlashes, urlPartBuilder.toString(), parameterName));
+		prepareParameters();
 	}
-	
-	private boolean isPatternSpecialChar(char c) {
-		for (char special : PATTERN_SPECIAL_CHARS) {
-			if (c == special) {
-					return true;
-			}
-		}
-		
-		return false;
+
+	public void setUrlPattern(UrlPattern urlPattern) {
+		this.urlPattern = urlPattern;
+		prepareParameters();
 	}
-	
-	/** Tests if the character is a valid name character: [A-Za-z0-9_]
+
+	/** Sets the route's parameters. For parameters that are also contained in the
+	 * URL pattern, the values here will be defaults. The rest will always be
+	 * applied.
 	 */
-	private boolean isValidNameChar(char c) {
-		return (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') || (c >= '0' && c <= '9') || c == '_'; 
+	public void setParameters(Map<String, String> parameters) {
+		this.parameters = parameters;
+		prepareParameters();
 	}
-	
-	/** Lazily create the regular expression.
+
+	/** Sets the allowed methods. The default allows any method.
 	 */
-	private Pattern getRegex() {
-		if (regex == null) {
-			StringBuilder regexBuilder = new StringBuilder();
-			regexBuilder.append('^');
-			
-			for (UrlParameter urlParameter : urlParameters) {
-				for (char c : urlParameter.precedingUrlPart.toCharArray()) {
-					if (isPatternSpecialChar(c)) {
-						regexBuilder.append('\\');
-					}
-					regexBuilder.append(c);
+	public void setMethods(Set<String> methods) {
+		this.methods = methods;
+	}
+
+	/** Sets the forbidden methods. The default allows any method.
+	 */
+	public void setExcludedMethods(Set<String> excludedMethods) {
+		this.excludedMethods = excludedMethods;
+	}
+
+	/** Determines what parameters are required based on the route's parameters
+	 * and the URL's parameters.
+	 */
+	private void prepareParameters() {
+		if (urlPattern != null && parameters != null) {
+			staticParameters = new HashMap<String, String>(parameters);
+
+			defaultParameters = new HashMap<String, Object>();
+			requiredParameters = new ArrayList<String>();
+
+			hasUrlParameter = urlPattern.hasParameter();
+			for (String parameterName : urlPattern.getParameterNames()) {
+				if (staticParameters.containsKey(parameterName)) {
+					defaultParameters.put(parameterName, staticParameters.remove(parameterName));
 				}
-				
-				if (urlParameter.name != null) {
-					regexBuilder.append(urlParameter.allowSlashes ? VALUE_WITH_SLASHES : VALUE_WITHOUT_SLASHES);
-					if (!urlParameter.required) {
-						regexBuilder.append('?');
-					}
+				else {
+					requiredParameters.add(parameterName);
 				}
 			}
-			
-			regexBuilder.append('$');
-			regex = Pattern.compile(regexBuilder.toString());
 		}
-		
-		return regex;
 	}
-	
+
 	public String getName() {
 		return name;
 	}
-	
-	public Map<String, String> getMatch(String url, HttpServletRequest request) {
+
+	public Map<String, String> match(String url, HttpServletRequest request) {
 		if (methods != null && !methods.contains(request.getMethod())) {
 			return null;
 		}
 		if (excludedMethods != null && methods.contains(request.getMethod())) {
 			return null;
 		}
-		
+
 		Map<String, String> result = null;
 		if (!hasUrlParameter) {
 			if (url.equals(pattern)) {
@@ -211,27 +131,25 @@ public class DefaultRoute {
 			}
 		}
 		else {
-			Matcher matcher = getRegex().matcher(url);
-			if (matcher.matches()) {
+			Map<String, String> urlMatches = urlPattern.match(url);
+			if (urlMatches != null) {
 				result = new HashMap<String, String>();
-				
-				int matchNumber = 1;
-				for (UrlParameter urlParameter : urlParameters) {
-					if (urlParameter.name != null) {
-						String value = matcher.group(matchNumber++);
-						if (value == null) {
-							value = String.valueOf(defaultParameters.get(urlParameter.name));
-						}
-						result.put(urlParameter.name, value);
+				for (Map.Entry<String, String> urlMatch: urlMatches.entrySet()) {
+					String key = urlMatch.getKey();
+					Object value = urlMatch.getValue();
+					if (value == null) {
+						value = defaultParameters.get(key);
 					}
+					result.put(key, String.valueOf(value));
 				}
+
 				result.putAll(staticParameters);
 			}
 		}
 
 		return result;
 	}
-	
+
 	public int match(Map<String, Object> parameters, Map<String, String> contextParameters) {
 		// make sure all required parameters are provided
 		for (String requiredParameter : requiredParameters) {
@@ -239,9 +157,9 @@ public class DefaultRoute {
 				return -1;
 			}
 		}
-		
+
 		int matchCount = requiredParameters.size();
-		
+
 		// make sure all static parameters match
 		for (Map.Entry<String, String> staticParameter : staticParameters.entrySet()) {
 			String key = staticParameter.getKey();
@@ -256,94 +174,30 @@ public class DefaultRoute {
 				if (!parameterValue.equals(staticParameter.getValue())) {
 					return -1;
 				}
-				
+
 				matchCount++;
 			}
 		}
-		
+
 		return matchCount;
 	}
-	
-	public String getUrl(Map<String, Object> parameters, Map<String, String> contextParameters) {
-		StringBuilder urlBuilder = new StringBuilder();
-		// FIXME assumes parameter is no first
-		for (UrlParameter urlParameter : urlParameters) {
-			urlBuilder.append(urlParameter.precedingUrlPart);
-			if (urlParameter.name != null) {
-				Object value = parameters.get(urlParameter.name);
-				if (value == null) {
-					value = defaultParameters.get(urlParameter.name);
-				}
-				if (value == null) {
-					String contextValue = contextParameters.get(urlParameter.name);
-					if (contextValue != null) {
-						value = contextValue;
-					}
-				}
-				if (urlParameter.required || !value.equals(defaultParameters.get(urlParameter.name))) {
-					urlBuilder.append(value);
-				}
-			}
-		}
-		
-		return urlBuilder.toString();
-	}
-	
-	public String getUrlPattern() {
-		HashMap<String, Object> parameterPatterns = new HashMap<String, Object>(urlParameters.size());
-		for (UrlParameter parameter : urlParameters) {
-			if (parameter.name != null) {
-				parameterPatterns.put(parameter.name, "${" + parameter.name + '}');
-			}
-		}
-		return getUrl(parameterPatterns, null);
-	}
-	
-	public DefaultRoute apply(Map<String, String> parameters) {
+
+	public DefaultRoute apply(Map<String, String> parameters, Set<String> methods, Set<String> excludedMethods) {
 		DefaultRoute result = new DefaultRoute();
-		
-		result.defaultParameters.putAll(defaultParameters);
-		result.staticParameters.putAll(staticParameters);
-		result.staticParameters.putAll(parameters);
-		result.requiredParameters.addAll(requiredParameters);
-		result.methods = methods;
-		result.excludedMethods = excludedMethods;
-		
-		StringBuilder urlPartBuilder = new StringBuilder();
-		for (UrlParameter urlParameter : urlParameters) {
-			if (urlParameter.name != null) {
-				urlPartBuilder.append(urlParameter.precedingUrlPart);
-				String value = parameters.get(urlParameter.name);
-				if (value != null) {
-					urlPartBuilder.append(value);
-					result.defaultParameters.remove(urlParameter.name);
-					result.staticParameters.remove(urlParameter.name);
-					result.requiredParameters.remove(urlParameter.name);
-				}
-				else {
-					result.urlParameters.add(new UrlParameter(urlParameter.required, urlParameter.allowSlashes, urlPartBuilder.toString(), urlParameter.name));
-					urlPartBuilder = new StringBuilder();
-				}
-			}
-			else {
-				result.urlParameters.add(urlParameter);
-			}
-		}
-		
+
+		result.urlPattern = urlPattern.apply(parameters);
+		result.parameters = new HashMap<String, String>(this.parameters);
+		result.parameters.putAll(parameters);
+		result.prepareParameters();
+
 		return result;
 	}
-	
-	private static class UrlParameter {
-		private boolean required;
-		private boolean allowSlashes;
-		private String precedingUrlPart;
-		private String name;
 
-		public UrlParameter(boolean required, boolean allowSlashes, String precedingUrlPart, String name) {
-			this.required = required;
-			this.allowSlashes = allowSlashes;
-			this.precedingUrlPart = precedingUrlPart;
-			this.name = name;
-		}
+	public String getUrl(Map<String, Object> parameters, Map<String, String> contextParameters) {
+		return urlPattern.getUrl(parameters, defaultParameters, contextParameters);
+	}
+
+	public UrlPattern getUrlPattern() {
+		return urlPattern;
 	}
 }

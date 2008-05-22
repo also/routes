@@ -87,7 +87,7 @@ public class RouteHandlerMapping extends AbstractHandlerMapping implements Mappi
 		String url = URL_PATH_HELPER.getPathWithinApplication(request);
 		
 		for (DefaultRoute route: routes) {
-			match = route.getMatch(url, request);
+			match = route.match(url, request);
 			if (match != null) {
 				request.setAttribute(MATCHER_ATTRIBUTE_NAME, route);
 				request.setAttribute(MATCH_ATTRIBUTE_NAME, match);

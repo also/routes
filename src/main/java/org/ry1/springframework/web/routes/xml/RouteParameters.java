@@ -2,19 +2,43 @@
 
 package org.ry1.springframework.web.routes.xml;
 
-import java.util.Map;
+import java.util.HashMap;
 
-class RouteParameters {
-	public Map<String, String> metaParameters;
-	public Map<String, String> routeParameters;
+class RouteParameters implements Cloneable {
+	public HashMap<String, String> metaParameters;
+	public HashMap<String, String> routeParameters;
+	public HashMap<String, String> routeRegexes;
 	
-	public RouteParameters(Map<String, String> metaParameters, Map<String, String> routeParameters) {
-		this.metaParameters = metaParameters;
-		this.routeParameters = routeParameters;
+	public RouteParameters() {
+		initDefault();
+	}
+	
+	public RouteParameters(RouteParameters that) {
+		if (that != null) {
+			metaParameters = new HashMap<String, String>(that.metaParameters);
+			routeParameters = new HashMap<String, String>(that.routeParameters);
+		}
+		else {
+			initDefault();
+		}
+	}
+	
+	private void initDefault() {
+		metaParameters = new HashMap<String, String>();
+		routeParameters = new HashMap<String, String>();
+	}
+	
+	public String getMetaParameter(String name) {
+		return metaParameters.get(name);
 	}
 	
 	public String getMetaParameter(String name, String defaultValue) {
 		String result = metaParameters.get(name);
 		return result != null ? result : defaultValue;
+	}
+	
+	@Override
+	protected RouteParameters clone() throws CloneNotSupportedException {
+		return new RouteParameters(this);
 	}
 }

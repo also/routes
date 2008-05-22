@@ -2,9 +2,6 @@
 
 package org.ry1.springframework.web.routes.xml;
 
-import java.util.Collections;
-
-import org.ry1.springframework.web.routes.DefaultRoute;
 import org.springframework.beans.factory.config.ListFactoryBean;
 import org.springframework.beans.factory.support.BeanDefinitionBuilder;
 import org.springframework.beans.factory.support.ManagedList;
@@ -24,10 +21,9 @@ public abstract class AbstractRouteListParser extends AbstractSingleBeanDefiniti
 	@Override
 	protected void doParse(Element element, ParserContext parserContext, BeanDefinitionBuilder builder) {
 		ManagedList list = new ManagedList();
-		RouteParameters routeParameters = new RouteParameters(Collections.EMPTY_MAP, Collections.EMPTY_MAP);
+		RouteParameters routeParameters = new RouteParameters();
 		parseRouteList(new ParserContext(parserContext.getReaderContext(), parserContext.getDelegate(), builder.getRawBeanDefinition()), element, list, routeParameters);
 		applyRouteList(parserContext, element, list, builder);
-		list.add(new DefaultRoute("", Collections.EMPTY_MAP));
 	}
 	
 	protected void applyRouteList(ParserContext parserContext, Element element, ManagedList list, BeanDefinitionBuilder builder) {
