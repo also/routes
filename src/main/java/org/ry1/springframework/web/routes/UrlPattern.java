@@ -3,6 +3,7 @@ package org.ry1.springframework.web.routes;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
@@ -12,21 +13,32 @@ import java.util.regex.Pattern;
  * @author Ryan Berdeen
  *
  */
-public class UrlPattern {
+public class UrlPattern implements Cloneable {
 	private static final char[] PATTERN_SPECIAL_CHARS = ".\\+*?[^]$(){}=!<>|:".toCharArray();
-	private static final String VALUE_WITHOUT_SLASHES = "([^/]+)";
-	private static final String VALUE_WITH_SLASHES = "(.+)";
+	private static final String VALUE_WITHOUT_SLASHES = "[^/]+";
+	private static final String VALUE_WITH_SLASHES = ".+";
 	private static final char PARAMETER_WITHOUT_SLASHES_PREFIX = ':';
 	private static final char PARAMETER_WITH_SLASHES_PREFIX = '*';
 	
+	/** The regular expression this pattern uses to test URLs. */
 	private Pattern regex;
+	
+	/** The parameter names this pattern will provide. */
 	private HashSet<String> parameterNames;
-	private ArrayList<UrlParameter> urlParameters;
-	private boolean hasParameter;
+	
+	/** The URL segments that make up this pattern.
+	 *  These segments are used to generate the regular expression and generate
+	 *  URLs from parameters.
+	 */
+	private ArrayList<UrlSegment> segments;
 	
 	private UrlPattern() {
-		urlParameters = new ArrayList<UrlParameter>();
+		segments = new ArrayList<UrlSegment>();
 		parameterNames = new HashSet<String>();
+	}
+	
+	public static UrlPattern parse(String pattern) {
+		return parse(pattern, null);
 	}
 	
 	/** Parses a String into a URL pattern.
@@ -43,7 +55,7 @@ public class UrlPattern {
 		boolean requireNameStart = false;
 		StringBuilder nameBuilder = null;
 		boolean allowSlashes = false;
-		StringBuilder urlPartBuilder = new StringBuilder();
+		StringBuilder segmentBuilder = new StringBuilder();
 		
 		for (int i = 0, len = pattern.length(); i < len; ++i) {
 			char c = pattern.charAt(i);
@@ -52,8 +64,8 @@ public class UrlPattern {
 					nameBuilder.append(c);
 				}
 				else {
-					builder.addParameterName(urlPartBuilder, nameBuilder, allowSlashes);
-					urlPartBuilder = new StringBuilder();
+					builder.addParameterName(segmentBuilder, nameBuilder, allowSlashes);
+					segmentBuilder = new StringBuilder();
 					nameBuilder = null;
 					
 					//
@@ -69,7 +81,7 @@ public class UrlPattern {
 				requireNameStart = true;
 			}
 			else {
-				urlPartBuilder.append(c);
+				segmentBuilder.append(c);
 			}
 			
 			// peek ahead at the next name character and make sure there can be a valid name
@@ -92,7 +104,7 @@ public class UrlPattern {
 			}
 		}
 		
-		builder.addParameterName(urlPartBuilder, nameBuilder, allowSlashes);
+		builder.addParameterName(segmentBuilder, nameBuilder, allowSlashes);
 		
 		return builder.getUrlPattern();
 	}
@@ -107,14 +119,19 @@ public class UrlPattern {
 		return false;
 	}
 	
+	private static void appendStringToRegex(String string, StringBuilder regexBuilder) {
+		for (char c : string.toCharArray()) {
+			if (isPatternSpecialChar(c)) {
+				regexBuilder.append('\\');
+			}
+			regexBuilder.append(c);
+		}
+	}
+	
 	/** Tests if the character is a valid name character: [A-Za-z0-9_]
 	 */
 	private static boolean isValidNameChar(char c) {
 		return (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') || (c >= '0' && c <= '9') || c == '_'; 
-	}
-	
-	public boolean hasParameter() {
-		return hasParameter;
 	}
 	
 	public HashSet<String> getParameterNames() {
@@ -123,25 +140,13 @@ public class UrlPattern {
 	
 	/** Lazily create the regular expression.
 	 */
-	private Pattern getRegex() {
+	public Pattern getRegex() {
 		if (regex == null) {
 			StringBuilder regexBuilder = new StringBuilder();
 			regexBuilder.append('^');
 			
-			for (UrlParameter urlParameter : urlParameters) {
-				for (char c : urlParameter.precedingUrlPart.toCharArray()) {
-					if (isPatternSpecialChar(c)) {
-						regexBuilder.append('\\');
-					}
-					regexBuilder.append(c);
-				}
-				
-				if (urlParameter.name != null) {
-					regexBuilder.append(urlParameter.allowSlashes ? VALUE_WITH_SLASHES : VALUE_WITHOUT_SLASHES);
-					if (!urlParameter.required) {
-						regexBuilder.append('?');
-					}
-				}
+			for (UrlSegment segment : segments) {
+				segment.appendRegex(regexBuilder);
 			}
 			
 			regexBuilder.append('$');
@@ -163,10 +168,11 @@ public class UrlPattern {
 			result = new HashMap<String, String>();
 			
 			int matchNumber = 1;
-			for (UrlParameter urlParameter : urlParameters) {
-				if (urlParameter.name != null) {
-					String value = matcher.group(matchNumber++);
-					result.put(urlParameter.name, value);
+			for (UrlSegment segment : segments) {
+				if (segment instanceof ParameterSegment) {
+					ParameterSegment parameter = (ParameterSegment) segment;
+					String value = parameter.value != null ? parameter.value : matcher.group(matchNumber++);
+					result.put(parameter.name, value);
 				}
 			}
 		}
@@ -174,25 +180,12 @@ public class UrlPattern {
 		return result;
 	}
 	
-	public String getUrl(Map<String, Object> parameters, Map<String, Object> defaultParameters, Map<String, String> contextParameters) {
+	/** Builds a URL using the parameters.
+	 */
+	public String buildUrl(Map<String, Object> parameters, Map<String, Object> defaultParameters, Map<String, String> contextParameters) {
 		StringBuilder urlBuilder = new StringBuilder();
-		for (UrlParameter urlParameter : urlParameters) {
-			urlBuilder.append(urlParameter.precedingUrlPart);
-			if (urlParameter.name != null) {
-				Object value = parameters.get(urlParameter.name);
-				if (value == null) {
-					value = defaultParameters.get(urlParameter.name);
-				}
-				if (value == null) {
-					String contextValue = contextParameters.get(urlParameter.name);
-					if (contextValue != null) {
-						value = contextValue;
-					}
-				}
-				if (urlParameter.required || !value.equals(defaultParameters.get(urlParameter.name))) {
-					urlBuilder.append(value);
-				}
-			}
+		for (UrlSegment segment : segments) {
+			segment.appendUrl(urlBuilder, parameters, defaultParameters, contextParameters);
 		}
 		
 		return urlBuilder.toString();
@@ -202,54 +195,255 @@ public class UrlPattern {
 	 * as <code>${parameterName}</code>, similar to JSP EL.
 	 */
 	public String getStringTemplate() {
-		StringBuilder urlBuilder = new StringBuilder();
-		for (UrlParameter urlParameter : urlParameters) {
-			urlBuilder.append(urlParameter.precedingUrlPart);
-			if (urlParameter.name != null) {
-				urlBuilder.append("${");
-				urlBuilder.append(urlParameter.name);
-				urlBuilder.append("}");
-			}
+		StringBuilder templateBuilder = new StringBuilder();
+		for (UrlSegment segment : segments) {
+			segment.appendTemplate(templateBuilder);
 		}
 		
-		return urlBuilder.toString();
+		return templateBuilder.toString();
 	}
 	
 	public UrlPattern apply(Map<String, String> parameters) {
 		UrlPattern result = new UrlPattern();
 		
-		StringBuilder urlPartBuilder = new StringBuilder();
-		for (UrlParameter urlParameter : urlParameters) {
-			if (urlParameter.name != null) {
-				urlPartBuilder.append(urlParameter.precedingUrlPart);
-				String value = parameters.get(urlParameter.name);
-				if (value != null) {
-					urlPartBuilder.append(value);
-				}
-				else {
-					result.urlParameters.add(new UrlParameter(urlParameter.required, urlParameter.allowSlashes, urlPartBuilder.toString(), urlParameter.name));
-					urlPartBuilder = new StringBuilder();
-				}
-			}
-			else {
-				result.urlParameters.add(urlParameter);
-			}
+		for (UrlSegment segment : segments) {
+			result.append(segment.apply(parameters));
 		}
 		
 		return result;
 	}
 	
-	private static class UrlParameter {
+	/** Returns a new UrlPattern with the pattern appended to it.
+	 *  All parameters in the appended pattern are required.
+	 */
+	public UrlPattern append(String pattern) {
+		return append(pattern, null);
+	}
+	
+	/** Returns a new UrlPattern with the pattern appended to it.
+	 *  The named parameters in the appended pattern are not required.
+	 */
+	public UrlPattern append(String pattern, Set<String> optionalParameterNames) {
+		return append(parse(pattern, optionalParameterNames));
+	}
+	
+	/** Returns a new UrlPattern with the pattern appended to it.
+	 */
+	public UrlPattern append(UrlPattern urlPattern) {
+		UrlPattern result = clone();
+
+		Iterator<UrlSegment> iterator = urlPattern.segments.iterator();
+		
+		if (iterator.hasNext()) {
+			UrlSegment current = iterator.next();
+			
+			result.append(current);
+			
+			while (iterator.hasNext()) {
+				current = iterator.next();
+				result.segments.add(current.clone());
+				if (current instanceof ParameterSegment) {
+					result.parameterNames.add(((ParameterSegment) current).name);
+				}
+			}
+		}
+		return result;
+	}
+	
+	/** Returns a new UrlPattern with the static url segment appended to it.
+	 */
+	public UrlPattern appendStatic(String segment) {
+		UrlSegment parameter = new StaticSegment(segment);
+		return appended(parameter);
+	}
+	
+	/** Returns a new UrlPattern with the parameter appended to it.
+	 *  The parameter is required and does not allow slashes.
+	 */
+	public UrlPattern appendParameter(String parameterName) {
+		return appendParameter(parameterName, false);
+	}
+	
+	/** Returns a new UrlPattern with the parameter appended to it.
+	 *  The parameter is required.
+	 */
+	public UrlPattern appendParameter(String parameterName, boolean allowSlashes) {
+		ParameterSegment parameter = new ParameterSegment(true, allowSlashes, parameterName);
+		return appended(parameter);
+	}
+	
+	/** Returns a new UrlPattern with the UrlSegment appended.
+	 */
+	private UrlPattern appended(UrlSegment segment) {
+		UrlPattern result = clone();
+		result.append(segment);
+		return result;
+	}
+	
+	/** Appends a UrlSegment. Only call this method during pattern creation.
+	 */
+	private void append(UrlSegment segment) {
+		segments.add(segment.clone());
+		if (segment instanceof ParameterSegment) {
+			ParameterSegment parameter = (ParameterSegment) segment;
+			if (parameter.value == null) {
+				parameterNames.add(parameter.name);
+			}
+		}
+	}
+	
+	@SuppressWarnings("unchecked")
+	@Override
+	public UrlPattern clone() {
+		try {
+			UrlPattern result = (UrlPattern) super.clone();
+			
+			result.segments = new ArrayList<UrlSegment>(segments.size());
+			for (UrlSegment parameter : segments) {
+				result.segments.add(parameter.clone());
+			}
+			
+			result.parameterNames = (HashSet<String>) parameterNames.clone();
+			
+			return result;
+		}
+		catch (CloneNotSupportedException ex) {
+			throw new Error(ex);
+		}
+	}
+	
+	private static interface UrlSegment extends Cloneable {
+		/** Appends the regex that represents this segment to the builder.
+		 */
+		public void appendRegex(StringBuilder regexBuilder);
+		
+		/** Appends the URL generated by applying the parameters to this segment to the builder.
+		 */
+		public void appendUrl(StringBuilder urlBuilder, Map<String, Object> parameters, Map<String, Object> defaultParameters, Map<String, String> contextParameters);
+		
+		/** Appends the template that represents this segment to the builder.
+		 */
+		public void appendTemplate(StringBuilder templateBuilder);
+		
+		public UrlSegment apply(Map<String, String> parameters);
+		
+		public UrlSegment clone();
+	}
+	
+	private static class StaticSegment implements UrlSegment, Cloneable {
+		private String value;
+		
+		private StaticSegment(String value) {
+			this.value = value;
+		}
+		
+		public void appendRegex(StringBuilder regexBuilder) {
+			appendStringToRegex(value, regexBuilder);
+		}
+		
+		public void appendUrl(StringBuilder urlBuilder, Map<String, Object> parameters, Map<String, Object> defaultParameters, Map<String, String> contextParameters) {
+			urlBuilder.append(value);
+		}
+		
+		public void appendTemplate(StringBuilder templateBuilder) {
+			templateBuilder.append(value);
+		}
+		
+		public UrlSegment apply(Map<String, String> parameters) {
+			return clone();
+		}
+		
+		public StaticSegment clone() {
+			return new StaticSegment(value);
+		}
+	}
+	
+	private static class ParameterSegment implements UrlSegment, Cloneable {
 		private boolean required;
 		private boolean allowSlashes;
-		private String precedingUrlPart;
 		private String name;
+		private String regex;
+		private String value;
 
-		public UrlParameter(boolean required, boolean allowSlashes, String precedingUrlPart, String name) {
+		public ParameterSegment(boolean required, boolean allowSlashes, String name) {
+			this(required, allowSlashes, name, null);
+		}
+
+		public ParameterSegment(boolean required, boolean allowSlashes, String name, String regex) {
+			this(required, allowSlashes, name, regex, null);
+		}
+
+		public ParameterSegment(boolean required, boolean allowSlashes, String name, String regex, String value) {
 			this.required = required;
 			this.allowSlashes = allowSlashes;
-			this.precedingUrlPart = precedingUrlPart;
 			this.name = name;
+			this.regex = regex;
+			this.value = value;
+		}
+		
+		@Override
+		public ParameterSegment clone() {
+			try {
+				return (ParameterSegment) super.clone();
+			}
+			catch (CloneNotSupportedException ex) {
+				throw new Error(ex);
+			}
+		}
+		
+		public void appendRegex(StringBuilder regexBuilder) {
+			regexBuilder.append('(');
+			if (regex != null) {
+				regexBuilder.append(regex);
+			}
+			else {
+				regexBuilder.append(allowSlashes ? VALUE_WITH_SLASHES : VALUE_WITHOUT_SLASHES);
+			}
+			if (!required) {
+				regexBuilder.append("|$");
+			}
+			regexBuilder.append(')');
+		}
+		
+		public void appendUrl(StringBuilder urlBuilder, Map<String, Object> parameters, Map<String, Object> defaultParameters, Map<String, String> contextParameters) {
+			Object result = value;
+			if (result == null) {
+				result = parameters.get(name);
+				if (result == null) {
+					result = defaultParameters.get(name);
+					if (result == null) {
+						String contextValue = contextParameters.get(name);
+						if (contextValue != null) {
+							result = contextValue;
+						}
+					}
+				}
+			}
+			
+			if (required || !result.equals(defaultParameters.get(name))) {
+				if (result == null) {
+					throw new RuntimeException("No value for [" + name + "]");
+				}
+				urlBuilder.append(result);
+			}
+		}
+		
+		public UrlSegment apply(Map<String, String> parameters) {
+			String value = parameters.get(name);
+			if (value != null) {
+				StringBuilder valueRegexBuilder = new StringBuilder();
+				appendStringToRegex(value, valueRegexBuilder);
+				return new ParameterSegment(true, false, name, valueRegexBuilder.toString(), value);
+			}
+			else {
+				return clone();
+			}
+		}
+		
+		public void appendTemplate(StringBuilder templateBuilder) {
+			templateBuilder.append("${");
+			templateBuilder.append(name);
+			templateBuilder.append("}");
 		}
 	}
 	
@@ -262,22 +456,25 @@ public class UrlPattern {
 			this.optionalParameterNames = optionalParameterNames;
 		}
 		
-		public void addParameterName(Object urlPart, Object parameterName, boolean allowSlashes) {
-			boolean required = false;
+		public void addParameterName(Object segment, Object parameterName, boolean allowSlashes) {
+			boolean required = true;
 			String paramaterNameString = null;
 			
 			if (parameterName != null) {
-				urlPattern.hasParameter = true;
 				paramaterNameString = parameterName.toString();
 				
 				urlPattern.parameterNames.add(paramaterNameString);
 				
-				if (!optionalParameterNames.contains(paramaterNameString)) {
-					required = true;
+				if (optionalParameterNames == null || optionalParameterNames.contains(paramaterNameString)) {
+					required = false;
 				}
 			}
 			
-			urlPattern.urlParameters.add(new UrlParameter(required, allowSlashes, urlPart.toString(), paramaterNameString));
+			urlPattern.segments.add(new StaticSegment(segment.toString()));
+			
+			if (paramaterNameString != null && !"".equals(paramaterNameString)) {
+				urlPattern.segments.add(new ParameterSegment(required, allowSlashes, paramaterNameString));
+			}
 		}
 		
 		public UrlPattern getUrlPattern() {

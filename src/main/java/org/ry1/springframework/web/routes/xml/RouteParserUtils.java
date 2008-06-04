@@ -1,8 +1,10 @@
 package org.ry1.springframework.web.routes.xml;
 
+import java.util.HashMap;
 import java.util.HashSet;
 
-import org.ry1.springframework.web.routes.DefaultRoute;
+import org.ry1.springframework.web.routes.Route;
+import org.ry1.springframework.web.routes.UrlPattern;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.beans.factory.support.BeanDefinitionBuilder;
 import org.springframework.beans.factory.xml.ParserContext;
@@ -12,34 +14,58 @@ import org.w3c.dom.Node;
 
 public class RouteParserUtils {
 	
-	public static DefaultRoute createRoute(RouteParameters routeParameters) {
-		return new DefaultRoute(getPattern(routeParameters), routeParameters.routeParameters, getName(routeParameters), getMethods(routeParameters), getExcludedMethods(routeParameters));
+	public static Route createRoute(RouteParameters routeParameters) {
+		return new Route(getPattern(routeParameters), routeParameters.routeParameters, getName(routeParameters), getMethods(routeParameters), getExcludedMethods(routeParameters));
+	}
+	
+	public static UrlPattern createUrlPattern(RouteParameters routeParameters) {
+		return UrlPattern.parse(getPattern(routeParameters), routeParameters.routeParameters.keySet());
 	}
 	
 	/** Parses the element, using only parameters from the routeParameters argument.
 	 */
 	public static BeanDefinition createRouteBeanDefinition(Element element, ParserContext parserContext, RouteParameters routeParameters) {
-		BeanDefinitionBuilder builder = BeanDefinitionBuilder.genericBeanDefinition(DefaultRoute.class);
+		BeanDefinitionBuilder builder = BeanDefinitionBuilder.genericBeanDefinition(Route.class);
 		builder.getRawBeanDefinition().setSource(parserContext.extractSource(element));
 
-		builder.addConstructorArg(getPattern(routeParameters));
-		builder.addConstructorArg(routeParameters.routeParameters);
-		builder.addConstructorArg(getName(routeParameters));
-		builder.addConstructorArg(getMethods(routeParameters));
-		builder.addConstructorArg(getExcludedMethods(routeParameters));
+		builder.addConstructorArgValue(getPattern(routeParameters));
+		builder.addConstructorArgValue(routeParameters.routeParameters);
+		builder.addConstructorArgValue(getName(routeParameters));
+		builder.addConstructorArgValue(getMethods(routeParameters));
+		builder.addConstructorArgValue(getExcludedMethods(routeParameters));
 		
 		return builder.getBeanDefinition();
 	}
 	
-	public static BeanDefinition createAppliedRouteBeanDefinition(Element element, ParserContext parserContext, DefaultRoute route, RouteParameters routeParameters) {
-		BeanDefinitionBuilder builder = BeanDefinitionBuilder.genericBeanDefinition(AppliedRouteFactoryBean.class);
+	public static BeanDefinition createAppliedRouteBeanDefinition(Element element, ParserContext parserContext, UrlPattern pattern, RouteParameters baseParameters, RouteParameters applyParameters) {
+		BeanDefinitionBuilder builder = BeanDefinitionBuilder.genericBeanDefinition(Route.class);
 
 		builder.getRawBeanDefinition().setSource(parserContext.extractSource(element));
 		
-		builder.addPropertyValue("route", route);
-		builder.addPropertyValue("parameters", routeParameters.routeParameters);
-		builder.addPropertyValue("methods", RouteParserUtils.getMethods(routeParameters));
-		builder.addPropertyValue("excludedMethods", RouteParserUtils.getExcludedMethods(routeParameters));
+		HashMap<String, String> routeParameters = (HashMap<String, String>) baseParameters.routeParameters.clone();
+		routeParameters.putAll(applyParameters.routeParameters);
+		
+		UrlPattern appliedPattern = pattern.apply(applyParameters.routeParameters);
+		
+		builder.addConstructorArgValue(appliedPattern);
+		builder.addConstructorArgValue(routeParameters);
+		builder.addConstructorArgValue(getName(baseParameters));
+		builder.addConstructorArgValue(getMethods(baseParameters));
+		builder.addConstructorArgValue(getExcludedMethods(baseParameters));
+		
+		return builder.getBeanDefinition();
+	}
+	
+	public static BeanDefinition createRouteBeanDefinition(Element element, ParserContext parserContext, UrlPattern pattern, RouteParameters routeParameters) {
+		BeanDefinitionBuilder builder = BeanDefinitionBuilder.genericBeanDefinition(Route.class);
+
+		builder.getRawBeanDefinition().setSource(parserContext.extractSource(element));
+
+		builder.addConstructorArgValue(pattern);
+		builder.addConstructorArgValue(routeParameters.routeParameters);
+		builder.addConstructorArgValue(getName(routeParameters));
+		builder.addConstructorArgValue(getMethods(routeParameters));
+		builder.addConstructorArgValue(getExcludedMethods(routeParameters));
 		
 		return builder.getBeanDefinition();
 	}

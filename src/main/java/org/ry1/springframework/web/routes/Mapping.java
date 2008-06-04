@@ -12,14 +12,14 @@ public interface Mapping {
 
 	public Map<String, String> EMPTY_PARAMETERS = Collections.emptyMap();
 
-	public abstract DefaultRoute getNamedRoute(String name);
+	public abstract Route getNamedRoute(String name);
 
-	public abstract DefaultRoute getBestMatch(Map<String, Object> parameters);
+	public abstract Route getBestMatch(Map<String, Object> parameters);
 
-	public abstract DefaultRoute getBestMatch(ServletRequest request,
+	public abstract Route getBestMatch(ServletRequest request,
 			Map<String, Object> parameters);
 
-	public abstract DefaultRoute getBestMatch(Map<String, Object> parameters,
+	public abstract Route getBestMatch(Map<String, Object> parameters,
 			Map<String, String> contextParameters);
 
 	public abstract String getUrl(HttpServletRequest request, String name,
@@ -29,9 +29,9 @@ public interface Mapping {
 			Map<String, Object> parameters, boolean includeContextPath);
 
 	public abstract String getUrl(HttpServletRequest request,
-			Map<String, Object> parameters, DefaultRoute route,
+			Map<String, Object> parameters, Route route,
 			boolean includeContextPath);
 	
-	public Map<String, DefaultRoute> getNamedRoutes();
+	public Map<String, Route> getNamedRoutes();
 
 }

@@ -50,6 +50,7 @@
 				<xsd:extension base="connectType">
 					<xsd:choice minOccurs="0" maxOccurs="unbounded">
 						<xsd:element name="collection" type="appliedType"/>
+						<xsd:element name="member" type="appliedType"/>
 					</xsd:choice>
 					<xsd:anyAttribute processContents="skip"/>
 				</xsd:extension>

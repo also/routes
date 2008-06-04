@@ -3,18 +3,18 @@ package org.ry1.springframework.web.routes.xml;
 import java.util.Map;
 import java.util.Set;
 
-import org.ry1.springframework.web.routes.DefaultRoute;
+import org.ry1.springframework.web.routes.Route;
 import org.springframework.beans.factory.FactoryBean;
 import org.springframework.beans.factory.InitializingBean;
 
 public class AppliedRouteFactoryBean implements FactoryBean, InitializingBean {
-	private DefaultRoute route;
+	private Route route;
 	private Map<String, String> parameters;
 	private Set<String> methods;
 	private Set<String> excludedMethods;
-	private DefaultRoute object;
+	private Route object;
 	
-	public void setRoute(DefaultRoute route) {
+	public void setRoute(Route route) {
 		this.route = route;
 	}
 	
@@ -30,12 +30,12 @@ public class AppliedRouteFactoryBean implements FactoryBean, InitializingBean {
 		this.excludedMethods = excludedMethods;
 	}
 	
-	public DefaultRoute getObject() throws Exception {
+	public Route getObject() throws Exception {
 		return object;
 	}
 
-	public Class<DefaultRoute> getObjectType() {
-		return DefaultRoute.class;
+	public Class<Route> getObjectType() {
+		return Route.class;
 	}
 
 	public boolean isSingleton() {

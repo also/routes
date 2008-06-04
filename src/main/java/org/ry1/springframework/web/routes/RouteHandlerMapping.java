@@ -32,17 +32,17 @@ public class RouteHandlerMapping extends AbstractHandlerMapping implements Mappi
 	private String controllerNameSuffix = "Controller";
 	private Strategy strategy = Strategy.WRAPPER;
 	
-	private List<DefaultRoute> routes;
+	private List<Route> routes;
 	
-	private HashMap<String, DefaultRoute> namedRoutes;
+	private HashMap<String, Route> namedRoutes;
 	
 	private Set<String> contextParameterNames = Collections.singleton("controller");
 	
 	private String javascriptRouteName = "routes.js";
 	private String javascriptRouteUri = "/routes.js";
-	private DefaultRoute javascriptRoute;
+	private Route javascriptRoute;
 	
-	private HashMap<DefaultRoute, Object> specialRoutes;
+	private HashMap<Route, Object> specialRoutes;
 	
 	public void setControllerParameterName(String controllerParameterName) {
 		this.controllerParameterName = controllerParameterName;
@@ -56,19 +56,19 @@ public class RouteHandlerMapping extends AbstractHandlerMapping implements Mappi
 		this.strategy = strategy;
 	}
 	
-	public void setRoutes(List<DefaultRoute> routes) {
-		this.routes = new ArrayList<DefaultRoute>(routes.size() + 1);
+	public void setRoutes(List<Route> routes) {
+		this.routes = new ArrayList<Route>(routes.size() + 1);
 		this.routes.addAll(routes);
 		
-		namedRoutes = new HashMap<String, DefaultRoute>();
-		javascriptRoute = new DefaultRoute(javascriptRouteUri, EMPTY_PARAMETERS, javascriptRouteName);
+		namedRoutes = new HashMap<String, Route>();
+		javascriptRoute = new Route(javascriptRouteUri, EMPTY_PARAMETERS, javascriptRouteName);
 		this.routes.add(javascriptRoute);
 		
-		specialRoutes = new HashMap<DefaultRoute, Object>();
+		specialRoutes = new HashMap<Route, Object>();
 		specialRoutes.put(javascriptRoute, new RouteJavascriptController(this));
 		
 		// process route names
-		for (DefaultRoute route : this.routes) {
+		for (Route route : this.routes) {
 			String name = route.getName();
 			if (name != null) {
 				namedRoutes.put(name, route);
@@ -86,7 +86,7 @@ public class RouteHandlerMapping extends AbstractHandlerMapping implements Mappi
 
 		String url = URL_PATH_HELPER.getPathWithinApplication(request);
 		
-		for (DefaultRoute route: routes) {
+		for (Route route: routes) {
 			match = route.match(url, request);
 			if (match != null) {
 				request.setAttribute(MATCHER_ATTRIBUTE_NAME, route);
@@ -121,23 +121,23 @@ public class RouteHandlerMapping extends AbstractHandlerMapping implements Mappi
 		return null;
 	}
 	
-	public DefaultRoute getNamedRoute(String name) {
+	public Route getNamedRoute(String name) {
 		return namedRoutes.get(name);
 	}
 	
-	public DefaultRoute getBestMatch(Map<String, Object> parameters) {
+	public Route getBestMatch(Map<String, Object> parameters) {
 		Map<String, String> contextParameters = Collections.emptyMap();
 		return getBestMatch(parameters, contextParameters);
 	}
 	
-	public DefaultRoute getBestMatch(ServletRequest request, Map<String, Object> parameters) {
+	public Route getBestMatch(ServletRequest request, Map<String, Object> parameters) {
 		return getBestMatch(parameters, getContextParameters(request));
 	}
 	
-	public DefaultRoute getBestMatch(Map<String, Object> parameters, Map<String, String> contextParameters) {
+	public Route getBestMatch(Map<String, Object> parameters, Map<String, String> contextParameters) {
 		int bestMatchCount = 0;
-		DefaultRoute bestMatch = null;
-		for (DefaultRoute route : routes) {
+		Route bestMatch = null;
+		for (Route route : routes) {
 			int matchCount = route.match(parameters, contextParameters);
 			if (matchCount > bestMatchCount) {
 				bestMatch = route;
@@ -149,18 +149,18 @@ public class RouteHandlerMapping extends AbstractHandlerMapping implements Mappi
 	}
 	
 	public String getUrl(HttpServletRequest request, String name, Map<String, Object> parameters, boolean includeContextPath) {
-		DefaultRoute route = getNamedRoute(name);
+		Route route = getNamedRoute(name);
 		
 		return getUrl(request, parameters, route, includeContextPath);
 	}
 	
 	public String getUrl(HttpServletRequest request, Map<String, Object> parameters, boolean includeContextPath) {
-		DefaultRoute route = getBestMatch(request, parameters);
+		Route route = getBestMatch(request, parameters);
 		
 		return getUrl(request, parameters, route,includeContextPath);
 	}
 	
-	public String getUrl(HttpServletRequest request, Map<String, Object> parameters, DefaultRoute route, boolean includeContextPath) {
+	public String getUrl(HttpServletRequest request, Map<String, Object> parameters, Route route, boolean includeContextPath) {
 		if (route == null) {
 			throw new RuntimeException("No route matches " + parameters);
 		}
@@ -171,7 +171,7 @@ public class RouteHandlerMapping extends AbstractHandlerMapping implements Mappi
 			url = request.getContextPath();
 		}
 		
-		url += route.getUrl(parameters, getContextParameters(request));
+		url += route.buildUrl(parameters, getContextParameters(request));
 		
 		// FIXME query string
 		
@@ -183,7 +183,7 @@ public class RouteHandlerMapping extends AbstractHandlerMapping implements Mappi
 		return (Map<String, String>) request.getAttribute(CONTEXT_PARAMETERS_ATTRIBUTE_NAME);
 	}
 
-	public Map<String, DefaultRoute> getNamedRoutes() {
+	public Map<String, Route> getNamedRoutes() {
 		return Collections.unmodifiableMap(namedRoutes);
 	}
 }

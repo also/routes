@@ -36,7 +36,7 @@ public class RouteJavascriptController implements Controller, LastModified {
 		
 		writer.write('{');
 		boolean first = true;
-		for (Map.Entry<String, DefaultRoute> entry : mapping.getNamedRoutes().entrySet()) {
+		for (Map.Entry<String, Route> entry : mapping.getNamedRoutes().entrySet()) {
 			if (!first) {
 				writer.write(',');
 			}

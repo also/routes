@@ -9,10 +9,8 @@ import java.util.Set;
 
 import javax.servlet.http.HttpServletRequest;
 
-public class DefaultRoute {
+public class Route {
 	private String name;
-	private String pattern;
-	private boolean hasUrlParameter;
 
 	/** The parameters that are required to generate a URL for this route. */
 	private ArrayList<String> requiredParameters;
@@ -23,7 +21,7 @@ public class DefaultRoute {
 	private Set<String> excludedMethods;
 	private UrlPattern urlPattern;
 
-	public DefaultRoute() {
+	public Route() {
 
 	}
 
@@ -31,7 +29,7 @@ public class DefaultRoute {
 	 * @param pattern the pattern the route will match
 	 * @param parameters the parameters that will be applied
 	 */
-	public DefaultRoute(String pattern, Map<String, String> parameters) {
+	public Route(String pattern, Map<String, String> parameters) {
 		this(pattern, parameters, null);
 	}
 
@@ -40,17 +38,15 @@ public class DefaultRoute {
 	 * @param parameters the parameters that will be applied
 	 * @param name the name of the route
 	 */
-	public DefaultRoute(String pattern, Map<String, String> parameters, String name) {
+	public Route(String pattern, Map<String, String> parameters, String name) {
 		this(pattern, parameters, name, null, null);
 	}
 
-	public DefaultRoute(String pattern, Map<String, String> parameters, String name, Set<String> methods, Set<String> excludedMethods) {
+	public Route(String pattern, Map<String, String> parameters, String name, Set<String> methods, Set<String> excludedMethods) {
 		this(UrlPattern.parse(pattern, parameters.keySet()), parameters, name, methods, excludedMethods);
-
-		this.pattern = pattern;
 	}
 
-	public DefaultRoute(UrlPattern urlPattern, Map<String, String> parameters, String name, Set<String> methods, Set<String> excludedMethods) {
+	public Route(UrlPattern urlPattern, Map<String, String> parameters, String name, Set<String> methods, Set<String> excludedMethods) {
 		this.urlPattern = urlPattern;
 
 		this.parameters = parameters;
@@ -100,7 +96,6 @@ public class DefaultRoute {
 			defaultParameters = new HashMap<String, Object>();
 			requiredParameters = new ArrayList<String>();
 
-			hasUrlParameter = urlPattern.hasParameter();
 			for (String parameterName : urlPattern.getParameterNames()) {
 				if (staticParameters.containsKey(parameterName)) {
 					defaultParameters.put(parameterName, staticParameters.remove(parameterName));
@@ -125,26 +120,20 @@ public class DefaultRoute {
 		}
 
 		Map<String, String> result = null;
-		if (!hasUrlParameter) {
-			if (url.equals(pattern)) {
-				result = staticParameters;
-			}
-		}
-		else {
-			Map<String, String> urlMatches = urlPattern.match(url);
-			if (urlMatches != null) {
-				result = new HashMap<String, String>();
-				for (Map.Entry<String, String> urlMatch: urlMatches.entrySet()) {
-					String key = urlMatch.getKey();
-					Object value = urlMatch.getValue();
-					if (value == null) {
-						value = defaultParameters.get(key);
-					}
-					result.put(key, String.valueOf(value));
-				}
 
-				result.putAll(staticParameters);
+		Map<String, String> urlMatches = urlPattern.match(url);
+		if (urlMatches != null) {
+			result = new HashMap<String, String>();
+			for (Map.Entry<String, String> urlMatch: urlMatches.entrySet()) {
+				String key = urlMatch.getKey();
+				Object value = urlMatch.getValue();
+				if (value == null) {
+					value = defaultParameters.get(key);
+				}
+				result.put(key, String.valueOf(value));
 			}
+
+			result.putAll(staticParameters);
 		}
 
 		return result;
@@ -177,13 +166,16 @@ public class DefaultRoute {
 
 				matchCount++;
 			}
+			else {
+				return -1;
+			}
 		}
 
 		return matchCount;
 	}
 
-	public DefaultRoute apply(Map<String, String> parameters, Set<String> methods, Set<String> excludedMethods) {
-		DefaultRoute result = new DefaultRoute();
+	public Route apply(Map<String, String> parameters, Set<String> methods, Set<String> excludedMethods) {
+		Route result = new Route();
 
 		result.urlPattern = urlPattern.apply(parameters);
 		result.parameters = new HashMap<String, String>(this.parameters);
@@ -193,8 +185,8 @@ public class DefaultRoute {
 		return result;
 	}
 
-	public String getUrl(Map<String, Object> parameters, Map<String, String> contextParameters) {
-		return urlPattern.getUrl(parameters, defaultParameters, contextParameters);
+	public String buildUrl(Map<String, Object> parameters, Map<String, String> contextParameters) {
+		return urlPattern.buildUrl(parameters, defaultParameters, contextParameters);
 	}
 
 	public UrlPattern getUrlPattern() {
