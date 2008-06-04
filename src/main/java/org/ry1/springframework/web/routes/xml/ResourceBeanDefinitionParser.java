@@ -17,7 +17,8 @@ public class ResourceBeanDefinitionParser extends AbstractRouteListParser {
 	private static final String POST_METHOD = "POST";
 	private static final String PUT_METHOD = "PUT";
 	private static final String DELETE_METHOD = "DELETE";
-	
+
+	private static final String INDEX_ACTION = "index";
 	private static final String SHOW_ACTION = "show";
 	private static final String CREATE_ACTION = "create";
 	private static final String UPDATE_ACTION = "update";
@@ -69,35 +70,35 @@ public class ResourceBeanDefinitionParser extends AbstractRouteListParser {
 			collectionPattern = prefix.append(routeParameters.getMetaParameter("collectionPattern", ":" + actionParamterName));
 		}
 		
+		RouteParameters appliedParameters;
+
+		RouteParameters collectionParameters = new RouteParameters(routeParameters);
+		collectionParameters.routeParameters.put(actionParamterName, INDEX_ACTION);
+		appliedParameters = applyParameters(routeParameters, GET_METHOD, actionParamterName, INDEX_ACTION);
+		list.add(RouteParserUtils.createAppliedRouteBeanDefinition(element, parserContext, collectionPattern, collectionParameters, appliedParameters));
+		
 		if (collectionActions != null) {
 			list.addAll(collectionActions);
 		}
-		
-		RouteParameters applyParameters = new RouteParameters();
-		applyParameters.routeParameters.put(actionParamterName, "index");
-		list.add(RouteParserUtils.createAppliedRouteBeanDefinition(element, parserContext, collectionPattern, routeParameters, applyParameters));
 		
 		if (memberPattern == null) {
 			memberPattern = prefix.append(':' + idParameterName + "/:" + actionParamterName);
 		}
 		
-		RouteParameters defaultMemberParameters = new RouteParameters(routeParameters);
-		defaultMemberParameters.routeParameters.put(actionParamterName, SHOW_ACTION);
-		list.add(RouteParserUtils.createRouteBeanDefinition(element, parserContext, prefix.appendParameter(idParameterName), defaultMemberParameters));
-		
-		RouteParameters appliedParameters;
+		RouteParameters memberParameters = new RouteParameters(routeParameters);
+		memberParameters.routeParameters.put(actionParamterName, SHOW_ACTION);
 		
 		appliedParameters = applyParameters(routeParameters, GET_METHOD, actionParamterName, SHOW_ACTION);
-		list.add(RouteParserUtils.createAppliedRouteBeanDefinition(element, parserContext, memberPattern, routeParameters, appliedParameters));
+		list.add(RouteParserUtils.createAppliedRouteBeanDefinition(element, parserContext, memberPattern, memberParameters, appliedParameters));
 		
 		appliedParameters = applyParameters(routeParameters, POST_METHOD, actionParamterName, CREATE_ACTION);
-		list.add(RouteParserUtils.createAppliedRouteBeanDefinition(element, parserContext, memberPattern, routeParameters, appliedParameters));
+		list.add(RouteParserUtils.createAppliedRouteBeanDefinition(element, parserContext, memberPattern, memberParameters, appliedParameters));
 		
 		appliedParameters = applyParameters(routeParameters, PUT_METHOD, actionParamterName, UPDATE_ACTION);
-		list.add(RouteParserUtils.createAppliedRouteBeanDefinition(element, parserContext, memberPattern, routeParameters, appliedParameters));
+		list.add(RouteParserUtils.createAppliedRouteBeanDefinition(element, parserContext, memberPattern, memberParameters, appliedParameters));
 		
 		appliedParameters = applyParameters(routeParameters, DELETE_METHOD, actionParamterName, DESTROY_ACTION);
-		list.add(RouteParserUtils.createAppliedRouteBeanDefinition(element, parserContext, memberPattern, routeParameters, appliedParameters));
+		list.add(RouteParserUtils.createAppliedRouteBeanDefinition(element, parserContext, memberPattern, memberParameters, appliedParameters));
 		
 		if (memberActions != null) {
 			list.addAll(memberActions);

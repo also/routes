@@ -45,7 +45,7 @@ public class RouteParserUtils {
 		HashMap<String, String> routeParameters = (HashMap<String, String>) baseParameters.routeParameters.clone();
 		routeParameters.putAll(applyParameters.routeParameters);
 		
-		UrlPattern appliedPattern = pattern.apply(applyParameters.routeParameters);
+		UrlPattern appliedPattern = pattern.apply(applyParameters.routeParameters, baseParameters.routeParameters);
 		
 		builder.addConstructorArgValue(appliedPattern);
 		builder.addConstructorArgValue(routeParameters);

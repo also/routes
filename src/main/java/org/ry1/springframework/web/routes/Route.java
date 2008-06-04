@@ -15,7 +15,7 @@ public class Route {
 	/** The parameters that are required to generate a URL for this route. */
 	private ArrayList<String> requiredParameters;
 	private Map<String, String> parameters;
-	private HashMap<String, Object> defaultParameters;
+	private HashMap<String, String> defaultParameters;
 	private HashMap<String, String> staticParameters;
 	private Set<String> methods;
 	private Set<String> excludedMethods;
@@ -93,7 +93,7 @@ public class Route {
 		if (urlPattern != null && parameters != null) {
 			staticParameters = new HashMap<String, String>(parameters);
 
-			defaultParameters = new HashMap<String, Object>();
+			defaultParameters = new HashMap<String, String>();
 			requiredParameters = new ArrayList<String>();
 
 			for (String parameterName : urlPattern.getParameterNames()) {
@@ -104,6 +104,8 @@ public class Route {
 					requiredParameters.add(parameterName);
 				}
 			}
+			
+			defaultParameters.putAll(urlPattern.getStaticParameters());
 		}
 	}
 
@@ -154,21 +156,17 @@ public class Route {
 			String key = staticParameter.getKey();
 			Object parameterValue = parameters.get(key);
 			if (parameterValue == null) {
-				String value = contextParameters.get(key);
-				if (value != null) {
-					parameterValue = value;
+				parameterValue = contextParameters.get(key);
+				if (parameterValue == null) {
+					parameterValue = defaultParameters.get(key);
 				}
 			}
-			if (parameterValue != null) {
-				if (!parameterValue.equals(staticParameter.getValue())) {
-					return -1;
-				}
-
-				matchCount++;
-			}
-			else {
+			
+			if (!staticParameter.getValue().equals(parameterValue)) {
 				return -1;
 			}
+
+			matchCount++;
 		}
 
 		return matchCount;
@@ -177,11 +175,10 @@ public class Route {
 	public Route apply(Map<String, String> parameters, Set<String> methods, Set<String> excludedMethods) {
 		Route result = new Route();
 
-		result.urlPattern = urlPattern.apply(parameters);
+		result.urlPattern = urlPattern.apply(parameters, defaultParameters);
 		result.parameters = new HashMap<String, String>(this.parameters);
 		result.parameters.putAll(parameters);
 		result.prepareParameters();
-
 		return result;
 	}
 
