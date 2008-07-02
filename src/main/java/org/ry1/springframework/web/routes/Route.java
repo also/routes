@@ -12,7 +12,9 @@ import javax.servlet.http.HttpServletRequest;
 public class Route {
 	private String name;
 
-	/** The parameters that are required to generate a URL for this route. */
+	/** The parameters that are required to generate a URL for this route.
+	 * These parameters must be present in {@link #match(Map, Map)} for the 
+	 * route to match. */
 	private ArrayList<String> requiredParameters;
 	private Map<String, String> parameters;
 	private HashMap<String, String> defaultParameters;
@@ -113,6 +115,10 @@ public class Route {
 		return name;
 	}
 
+	/** Matches the URL and request against the route. The URL must match the
+	 * URL pattern, and the request {@link HttpServletRequest#getMethod() method}
+	 * must be included an allowed and not excluded method.
+	 */
 	public Map<String, String> match(String url, HttpServletRequest request) {
 		if (methods != null && !methods.contains(request.getMethod())) {
 			return null;
@@ -141,6 +147,13 @@ public class Route {
 		return result;
 	}
 
+	/** Matches parameters against the parameters of the route. The parameters
+	 * must include all required parameters, and all static parameters must
+	 * have the correct values.
+	 * @param parameters
+	 * @param contextParameters
+	 * @return the number of matched parameters, or -1 for no match
+	 */
 	public int match(Map<String, Object> parameters, Map<String, String> contextParameters) {
 		// make sure all required parameters are provided
 		for (String requiredParameter : requiredParameters) {
