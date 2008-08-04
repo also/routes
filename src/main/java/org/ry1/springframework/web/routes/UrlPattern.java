@@ -25,8 +25,7 @@ public class UrlPattern implements Cloneable {
 	
 	/** The parameter names this pattern will provide. */
 	private HashSet<String> parameterNames;
-	
-	private HashMap<String, String> staticParameters;
+	private HashMap<String, String> parameterRegexes;
 	
 	/** The URL segments that make up this pattern.
 	 *  These segments are used to generate the regular expression and generate
@@ -37,7 +36,6 @@ public class UrlPattern implements Cloneable {
 	private UrlPattern() {
 		segments = new ArrayList<UrlSegment>();
 		parameterNames = new HashSet<String>();
-		staticParameters = new HashMap<String, String>();
 	}
 	
 	public static UrlPattern parse(String pattern) {
@@ -149,10 +147,6 @@ public class UrlPattern implements Cloneable {
 		return parameterNames;
 	}
 	
-	public Map<String, String> getStaticParameters() {
-		return staticParameters;
-	}
-	
 	/** Lazily create the regular expression.
 	 */
 	public Pattern getRegex() {
@@ -186,7 +180,7 @@ public class UrlPattern implements Cloneable {
 			for (UrlSegment segment : segments) {
 				if (segment instanceof ParameterSegment) {
 					ParameterSegment parameter = (ParameterSegment) segment;
-					String value = parameter.value != null ? parameter.value : matcher.group(matchNumber++);
+					String value = matcher.group(matchNumber++);
 					result.put(parameter.name, value.equals("") ? null : value);
 				}
 			}
@@ -301,12 +295,7 @@ public class UrlPattern implements Cloneable {
 		segments.add(segment.clone());
 		if (segment instanceof ParameterSegment) {
 			ParameterSegment parameter = (ParameterSegment) segment;
-			if (parameter.value == null) {
-				parameterNames.add(parameter.name);
-			}
-			else {
-				staticParameters.put(parameter.name, parameter.value);
-			}
+			parameterNames.add(parameter.name);
 		}
 	}
 	
@@ -330,6 +319,10 @@ public class UrlPattern implements Cloneable {
 		}
 	}
 	
+	private String getParameterRegex(String name) {
+		return null;
+	}
+	
 	private static interface UrlSegment extends Cloneable {
 		/** Appends the regex that represents this segment to the builder.
 		 */
@@ -350,13 +343,25 @@ public class UrlPattern implements Cloneable {
 	
 	private static class StaticSegment implements UrlSegment, Cloneable {
 		private String value;
+		private boolean required;
 		
 		private StaticSegment(String value) {
 			this.value = value;
 		}
 		
+		private StaticSegment(String value, boolean required) {
+			this(value);
+			this.required = required;
+		}
+		
 		public void appendRegex(StringBuilder regexBuilder) {
+			if (!required) {
+				regexBuilder.append("(?:");
+			}
 			appendStringToRegex(value, regexBuilder);
+			if (!required) {
+				regexBuilder.append("|$)");
+			}
 		}
 		
 		public void appendUrl(StringBuilder urlBuilder, Map<String, Object> parameters, Map<String, String> defaultParameters, Map<String, String> contextParameters) {
@@ -381,22 +386,16 @@ public class UrlPattern implements Cloneable {
 		private boolean allowSlashes;
 		private String name;
 		private String regex;
-		private String value;
 
 		public ParameterSegment(boolean required, boolean allowSlashes, String name) {
 			this(required, allowSlashes, name, null);
 		}
 
 		public ParameterSegment(boolean required, boolean allowSlashes, String name, String regex) {
-			this(required, allowSlashes, name, regex, null);
-		}
-
-		public ParameterSegment(boolean required, boolean allowSlashes, String name, String regex, String value) {
 			this.required = required;
 			this.allowSlashes = allowSlashes;
 			this.name = name;
 			this.regex = regex;
-			this.value = value;
 		}
 		
 		@Override
@@ -424,16 +423,13 @@ public class UrlPattern implements Cloneable {
 		}
 		
 		public void appendUrl(StringBuilder urlBuilder, Map<String, Object> parameters, Map<String, String> defaultParameters, Map<String, String> contextParameters) {
-			Object result = value;
+			Object result = parameters.get(name);
 			if (result == null) {
-				result = parameters.get(name);
+				result = defaultParameters.get(name);
 				if (result == null) {
-					result = defaultParameters.get(name);
-					if (result == null) {
-						String contextValue = contextParameters.get(name);
-						if (contextValue != null) {
-							result = contextValue;
-						}
+					String contextValue = contextParameters.get(name);
+					if (contextValue != null) {
+						result = contextValue;
 					}
 				}
 			}
@@ -449,10 +445,7 @@ public class UrlPattern implements Cloneable {
 		public UrlSegment apply(Map<String, String> parameters, Map<String, String> defaultParameters) {
 			String value = parameters.get(name);
 			if (value != null) {
-				String defaultValue = defaultParameters.get(name);
-				StringBuilder valueRegexBuilder = new StringBuilder();
-				appendStringToRegex(value, valueRegexBuilder);
-				return new ParameterSegment(!value.equals(defaultValue), false, name, valueRegexBuilder.toString(), value);
+				return new StaticSegment(value, required);
 			}
 			else {
 				return clone();

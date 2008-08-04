@@ -106,8 +106,6 @@ public class Route {
 					requiredParameters.add(parameterName);
 				}
 			}
-			
-			defaultParameters.putAll(urlPattern.getStaticParameters());
 		}
 	}
 
