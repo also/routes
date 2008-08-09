@@ -14,10 +14,11 @@ import javax.servlet.http.HttpServletRequest;
 
 import org.ry1.springframework.web.util.ExtendedParameters;
 import org.ry1.springframework.web.util.ExtendedParameters.Strategy;
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.web.servlet.handler.AbstractHandlerMapping;
 import org.springframework.web.util.UrlPathHelper;
 
-public class RouteHandlerMapping extends AbstractHandlerMapping implements Mapping {
+public class RouteHandlerMapping extends AbstractHandlerMapping implements Mapping, InitializingBean {
 	/** The request attribute under which the matching Route is bound. */
 	public static final String MATCHER_ATTRIBUTE_NAME = RouteHandlerMapping.class.getName() + ".matcher";
 	
@@ -61,7 +62,8 @@ public class RouteHandlerMapping extends AbstractHandlerMapping implements Mappi
 		this.routes.addAll(routes);
 		
 		namedRoutes = new HashMap<String, Route>();
-		javascriptRoute = new Route(javascriptRouteUri, EMPTY_PARAMETERS, javascriptRouteName);
+		javascriptRoute = new Route(javascriptRouteUri, EMPTY_PARAMETERS, EMPTY_PARAMETERS);
+		javascriptRoute.setName(javascriptRouteName);
 		this.routes.add(javascriptRoute);
 		
 		specialRoutes = new HashMap<Route, Object>();
@@ -162,7 +164,7 @@ public class RouteHandlerMapping extends AbstractHandlerMapping implements Mappi
 	
 	public String getUrl(HttpServletRequest request, Map<String, Object> parameters, Route route, boolean includeContextPath) {
 		if (route == null) {
-			throw new RuntimeException("No route matches " + parameters);
+			return null;
 		}
 		
 		String url = "" ;
@@ -185,5 +187,11 @@ public class RouteHandlerMapping extends AbstractHandlerMapping implements Mappi
 
 	public Map<String, Route> getNamedRoutes() {
 		return Collections.unmodifiableMap(namedRoutes);
+	}
+
+	public void afterPropertiesSet() throws Exception {
+		for (Route route : this.routes) {
+			route.prepare();
+		}
 	}
 }

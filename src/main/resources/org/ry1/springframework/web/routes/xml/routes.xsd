@@ -17,15 +17,25 @@
 	<xsd:complexType name="routesType">
 		<xsd:complexContent>
 			<xsd:extension base="beans:identifiedType">
-				<xsd:choice maxOccurs="unbounded">
-					<xsd:element ref="with"/>
-					<xsd:element ref="connect"/>
-					<xsd:element ref="resource"/>
-				</xsd:choice>
+				<xsd:sequence>
+					<xsd:element ref="parameter" minOccurs="0" maxOccurs="unbounded"/>
+					<xsd:choice maxOccurs="unbounded">
+						<xsd:element ref="with"/>
+						<xsd:element ref="connect"/>
+						<xsd:element ref="resource"/>
+					</xsd:choice>
+				</xsd:sequence>
 			</xsd:extension>
 		</xsd:complexContent>
 	</xsd:complexType>
-
+	
+	<xsd:element name="parameter">
+		<xsd:complexType>
+			<xsd:attribute name="name" use="required"/>
+			<xsd:attribute name="pattern" use="optional"/>
+			<xsd:attribute name="value" use="optional"/>
+		</xsd:complexType>
+	</xsd:element>
 
 	<xsd:element name="with">
 		<xsd:complexType>
@@ -39,6 +49,9 @@
 
 
 	<xsd:complexType name="connectType">
+		<xsd:sequence>
+			<xsd:element ref="parameter" minOccurs="0" maxOccurs="unbounded"/>
+		</xsd:sequence>
 		<xsd:anyAttribute processContents="skip"/>
 	</xsd:complexType>
 

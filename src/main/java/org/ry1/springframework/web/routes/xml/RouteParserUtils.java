@@ -11,28 +11,33 @@ import org.springframework.beans.factory.xml.ParserContext;
 import org.w3c.dom.Element;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 
 public class RouteParserUtils {
 	
 	public static Route createRoute(RouteParameters routeParameters) {
-		return new Route(getPattern(routeParameters), routeParameters.routeParameters, getName(routeParameters), getMethods(routeParameters), getExcludedMethods(routeParameters));
+		Route result = new Route(getPattern(routeParameters), routeParameters.parameterValues, routeParameters.parameterRegexes);
+		result.setName(getName(routeParameters));
+		result.setMethods(getMethods(routeParameters));
+		result.setExcludedMethods(getExcludedMethods(routeParameters));
+		
+		return result;
 	}
 	
 	public static UrlPattern createUrlPattern(RouteParameters routeParameters) {
-		return UrlPattern.parse(getPattern(routeParameters), routeParameters.routeParameters.keySet());
+		return UrlPattern.parse(getPattern(routeParameters), routeParameters.parameterValues.keySet(), routeParameters.parameterRegexes);
 	}
 	
-	/** Parses the element, using only parameters from the routeParameters argument.
+	/** Parses the element, using only parameters from the parameterValues argument.
 	 */
 	public static BeanDefinition createRouteBeanDefinition(Element element, ParserContext parserContext, RouteParameters routeParameters) {
 		BeanDefinitionBuilder builder = BeanDefinitionBuilder.genericBeanDefinition(Route.class);
 		builder.getRawBeanDefinition().setSource(parserContext.extractSource(element));
 
 		builder.addConstructorArgValue(getPattern(routeParameters));
-		builder.addConstructorArgValue(routeParameters.routeParameters);
-		builder.addConstructorArgValue(getName(routeParameters));
-		builder.addConstructorArgValue(getMethods(routeParameters));
-		builder.addConstructorArgValue(getExcludedMethods(routeParameters));
+		builder.addConstructorArgValue(routeParameters.parameterValues);
+		builder.addConstructorArgValue(routeParameters.parameterRegexes);
+		addPropertyValues(builder, routeParameters);
 		
 		return builder.getBeanDefinition();
 	}
@@ -42,16 +47,14 @@ public class RouteParserUtils {
 
 		builder.getRawBeanDefinition().setSource(parserContext.extractSource(element));
 		
-		HashMap<String, String> routeParameters = (HashMap<String, String>) baseParameters.routeParameters.clone();
-		routeParameters.putAll(applyParameters.routeParameters);
+		HashMap<String, String> routeParameters = (HashMap<String, String>) baseParameters.parameterValues.clone();
+		routeParameters.putAll(applyParameters.parameterValues);
 		
-		UrlPattern appliedPattern = pattern.apply(applyParameters.routeParameters, baseParameters.routeParameters);
+		UrlPattern appliedPattern = pattern.apply(applyParameters.parameterValues, baseParameters.parameterValues);
 		
-		builder.addConstructorArgValue(appliedPattern);
-		builder.addConstructorArgValue(routeParameters);
-		builder.addConstructorArgValue(getName(baseParameters));
-		builder.addConstructorArgValue(getMethods(baseParameters));
-		builder.addConstructorArgValue(getExcludedMethods(baseParameters));
+		builder.addPropertyValue("urlPattern", appliedPattern);
+		builder.addPropertyValue("parameters", routeParameters);
+		addPropertyValues(builder, baseParameters);
 		
 		return builder.getBeanDefinition();
 	}
@@ -61,13 +64,17 @@ public class RouteParserUtils {
 
 		builder.getRawBeanDefinition().setSource(parserContext.extractSource(element));
 
-		builder.addConstructorArgValue(pattern);
-		builder.addConstructorArgValue(routeParameters.routeParameters);
-		builder.addConstructorArgValue(getName(routeParameters));
-		builder.addConstructorArgValue(getMethods(routeParameters));
-		builder.addConstructorArgValue(getExcludedMethods(routeParameters));
+		builder.addPropertyValue("urlPattern", pattern);
+		builder.addPropertyValue("parameters", routeParameters.parameterValues);
+		addPropertyValues(builder, routeParameters);
 		
 		return builder.getBeanDefinition();
+	}
+	
+	private static void addPropertyValues(BeanDefinitionBuilder builder, RouteParameters routeParameters) {
+		builder.addPropertyValue("name", getName(routeParameters));
+		builder.addPropertyValue("methods", getMethods(routeParameters));
+		builder.addPropertyValue("excludedMethods", getExcludedMethods(routeParameters));
 	}
 	
 	public static HashSet<String> getMethods(RouteParameters routeParameters) {
@@ -118,11 +125,32 @@ public class RouteParserUtils {
 				result.metaParameters.put(parameterName, value);
 			}
 			else {
-				result.routeParameters.put(parameterName, value);
+				result.parameterValues.put(parameterName, value);
+			}
+		}
+		
+		NodeList children = element.getChildNodes();
+		
+		for (int i = 0; i < children.getLength(); i++) {
+			Node node = children.item(i);
+			if (node instanceof Element) {
+				Element child =  (Element) node;
+				applyParameter(child, result);
 			}
 		}
 		
 		return result;
 	}
 
+	private static void applyParameter(Element element, RouteParameters routeParameters) {
+		if (element.getTagName().equals("parameter")) {
+			String name = element.getAttribute("name");
+			if (element.hasAttribute("value")) {
+				routeParameters.parameterValues.put(name, element.getAttribute("value"));
+			}
+			if (element.hasAttribute("pattern")) {
+				routeParameters.parameterRegexes.put(name, element.getAttribute("pattern"));
+			}
+		}
+	}
 }

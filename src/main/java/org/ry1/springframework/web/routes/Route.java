@@ -23,48 +23,23 @@ public class Route {
 	private Set<String> excludedMethods;
 	private UrlPattern urlPattern;
 
-	public Route() {
-
-	}
+	public Route() {}
 
 	/** Creates a new unnamed route.
 	 * @param pattern the pattern the route will match
 	 * @param parameters the parameters that will be applied
 	 */
-	public Route(String pattern, Map<String, String> parameters) {
-		this(pattern, parameters, null);
-	}
-
-	/** Creates a new named route.
-	 * @param pattern the pattern the route will match
-	 * @param parameters the parameters that will be applied
-	 * @param name the name of the route
-	 */
-	public Route(String pattern, Map<String, String> parameters, String name) {
-		this(pattern, parameters, name, null, null);
-	}
-
-	public Route(String pattern, Map<String, String> parameters, String name, Set<String> methods, Set<String> excludedMethods) {
-		this(UrlPattern.parse(pattern, parameters.keySet()), parameters, name, methods, excludedMethods);
-	}
-
-	public Route(UrlPattern urlPattern, Map<String, String> parameters, String name, Set<String> methods, Set<String> excludedMethods) {
-		this.urlPattern = urlPattern;
-
+	public Route(String pattern, Map<String, String> parameters, Map<String, String> parameterRegexes) {
+		this.urlPattern = UrlPattern.parse(pattern, parameters.keySet(), parameterRegexes);
 		this.parameters = parameters;
-
+	}
+	
+	public void setName(String name) {
 		this.name = name;
-
-		// if methods are empty, set to null
-		this.methods = methods != null && methods.size() > 0 ? methods : null;
-		this.excludedMethods = excludedMethods != null && excludedMethods.size() > 0 ? excludedMethods : null;
-
-		prepareParameters();
 	}
 
 	public void setUrlPattern(UrlPattern urlPattern) {
 		this.urlPattern = urlPattern;
-		prepareParameters();
 	}
 
 	/** Sets the route's parameters. For parameters that are also contained in the
@@ -73,38 +48,35 @@ public class Route {
 	 */
 	public void setParameters(Map<String, String> parameters) {
 		this.parameters = parameters;
-		prepareParameters();
 	}
 
 	/** Sets the allowed methods. The default allows any method.
 	 */
 	public void setMethods(Set<String> methods) {
-		this.methods = methods;
+		this.methods = methods != null && methods.size() > 0 ? methods : null;
 	}
 
 	/** Sets the forbidden methods. The default allows any method.
 	 */
 	public void setExcludedMethods(Set<String> excludedMethods) {
-		this.excludedMethods = excludedMethods;
+		this.excludedMethods = excludedMethods != null && excludedMethods.size() > 0 ? excludedMethods : null;
 	}
 
 	/** Determines what parameters are required based on the route's parameters
 	 * and the URL's parameters.
 	 */
-	private void prepareParameters() {
-		if (urlPattern != null && parameters != null) {
-			staticParameters = new HashMap<String, String>(parameters);
+	public void prepare() {
+		staticParameters = new HashMap<String, String>(parameters);
 
-			defaultParameters = new HashMap<String, String>();
-			requiredParameters = new ArrayList<String>();
+		defaultParameters = new HashMap<String, String>();
+		requiredParameters = new ArrayList<String>();
 
-			for (String parameterName : urlPattern.getParameterNames()) {
-				if (staticParameters.containsKey(parameterName)) {
-					defaultParameters.put(parameterName, staticParameters.remove(parameterName));
-				}
-				else {
-					requiredParameters.add(parameterName);
-				}
+		for (String parameterName : urlPattern.getParameterNames()) {
+			if (staticParameters.containsKey(parameterName)) {
+				defaultParameters.put(parameterName, staticParameters.remove(parameterName));
+			}
+			else {
+				requiredParameters.add(parameterName);
 			}
 		}
 	}
@@ -148,8 +120,6 @@ public class Route {
 	/** Matches parameters against the parameters of the route. The parameters
 	 * must include all required parameters, and all static parameters must
 	 * have the correct values.
-	 * @param parameters
-	 * @param contextParameters
 	 * @return the number of matched parameters, or -1 for no match
 	 */
 	public int match(Map<String, Object> parameters, Map<String, String> contextParameters) {
@@ -189,7 +159,7 @@ public class Route {
 		result.urlPattern = urlPattern.apply(parameters, defaultParameters);
 		result.parameters = new HashMap<String, String>(this.parameters);
 		result.parameters.putAll(parameters);
-		result.prepareParameters();
+		result.prepare();
 		return result;
 	}
 

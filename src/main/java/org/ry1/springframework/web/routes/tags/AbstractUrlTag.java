@@ -53,6 +53,11 @@ public abstract class AbstractUrlTag extends SimpleTagSupport implements Dynamic
 			url = RouteUtils.getMapping(request).getUrl(request, parameters, includeContextPath);
 		}
 		
+		if (url == null) {
+			// TODO exception type
+			throw new RuntimeException("No route matches " + parameters);
+		}
+		
 		return url;
 	}
 	

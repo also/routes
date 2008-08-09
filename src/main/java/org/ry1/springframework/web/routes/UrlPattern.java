@@ -25,7 +25,6 @@ public class UrlPattern implements Cloneable {
 	
 	/** The parameter names this pattern will provide. */
 	private HashSet<String> parameterNames;
-	private HashMap<String, String> parameterRegexes;
 	
 	/** The URL segments that make up this pattern.
 	 *  These segments are used to generate the regular expression and generate
@@ -38,20 +37,17 @@ public class UrlPattern implements Cloneable {
 		parameterNames = new HashSet<String>();
 	}
 	
-	public static UrlPattern parse(String pattern) {
-		return parse(pattern, null);
-	}
-	
 	/** Parses a String into a URL pattern.
 	 * 
 	 * Parameters whose name is contained in <code>optionalParameterNames</code>
 	 * will not be required for URLs to match.
 	 * @param pattern describes the format of matching URLs
 	 * @param optionalParameterNames parameter names that are not required
+	 * @param parameterRegexes the regular expressions to use for the parameter values
 	 * @return a {@link UrlPattern} that will match URLs to the pattern
 	 */
-	public static UrlPattern parse(String pattern, Set<String> optionalParameterNames) {
-		UrlPatternBuilder builder = new UrlPatternBuilder(optionalParameterNames);
+	public static UrlPattern parse(String pattern, Set<String> optionalParameterNames, Map<String, String> parameterRegexes) {
+		UrlPatternBuilder builder = new UrlPatternBuilder(optionalParameterNames, parameterRegexes);
 		
 		boolean requireNameStart = false;
 		StringBuilder nameBuilder = null;
@@ -143,6 +139,8 @@ public class UrlPattern implements Cloneable {
 		return (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') || (c >= '0' && c <= '9') || c == '_'; 
 	}
 	
+	/** Returns the set of parameter names included in the URL.
+	 */
 	public Set<String> getParameterNames() {
 		return parameterNames;
 	}
@@ -226,14 +224,14 @@ public class UrlPattern implements Cloneable {
 	 *  All parameters in the appended pattern are required.
 	 */
 	public UrlPattern append(String pattern) {
-		return append(pattern, null);
+		return append(pattern, null, null);
 	}
 	
 	/** Returns a new UrlPattern with the pattern appended to it.
 	 *  The named parameters in the appended pattern are not required.
 	 */
-	public UrlPattern append(String pattern, Set<String> optionalParameterNames) {
-		return append(parse(pattern, optionalParameterNames));
+	public UrlPattern append(String pattern, Set<String> optionalParameterNames, Map<String, String> parameterRegexes) {
+		return append(parse(pattern, optionalParameterNames, parameterRegexes));
 	}
 	
 	/** Returns a new UrlPattern with the pattern appended to it.
@@ -319,10 +317,6 @@ public class UrlPattern implements Cloneable {
 		}
 	}
 	
-	private String getParameterRegex(String name) {
-		return null;
-	}
-	
 	private static interface UrlSegment extends Cloneable {
 		/** Appends the regex that represents this segment to the builder.
 		 */
@@ -346,11 +340,11 @@ public class UrlPattern implements Cloneable {
 		private boolean required;
 		
 		private StaticSegment(String value) {
-			this.value = value;
+			this(value, true);
 		}
 		
 		private StaticSegment(String value, boolean required) {
-			this(value);
+			this.value = value;
 			this.required = required;
 		}
 		
@@ -377,7 +371,7 @@ public class UrlPattern implements Cloneable {
 		}
 		
 		public StaticSegment clone() {
-			return new StaticSegment(value);
+			return new StaticSegment(value, required);
 		}
 	}
 	
@@ -461,16 +455,19 @@ public class UrlPattern implements Cloneable {
 	
 	private static class UrlPatternBuilder {
 		private Set<String> optionalParameterNames;
+		private Map<String, String> parameterRegexes;
 		private UrlPattern urlPattern;
 		
-		public UrlPatternBuilder(Set<String> optionalParameterNames) {
+		public UrlPatternBuilder(Set<String> optionalParameterNames, Map<String, String> parameterRegexes) {
 			urlPattern = new UrlPattern();
 			this.optionalParameterNames = optionalParameterNames;
+			this.parameterRegexes = parameterRegexes;
 		}
 		
 		public void addParameterName(Object segment, Object parameterName, boolean allowSlashes) {
 			boolean required = true;
 			String paramaterNameString = null;
+			String regex = null;
 			
 			if (parameterName != null) {
 				paramaterNameString = parameterName.toString();
@@ -480,12 +477,16 @@ public class UrlPattern implements Cloneable {
 				if (optionalParameterNames != null && optionalParameterNames.contains(paramaterNameString)) {
 					required = false;
 				}
+				
+				if (parameterRegexes != null) {
+					regex = parameterRegexes.get(paramaterNameString);
+				}
 			}
 			
 			urlPattern.segments.add(new StaticSegment(segment.toString()));
 			
 			if (paramaterNameString != null && !"".equals(paramaterNameString)) {
-				urlPattern.segments.add(new ParameterSegment(required, allowSlashes, paramaterNameString));
+				urlPattern.segments.add(new ParameterSegment(required, allowSlashes, paramaterNameString, regex));
 			}
 		}
 		

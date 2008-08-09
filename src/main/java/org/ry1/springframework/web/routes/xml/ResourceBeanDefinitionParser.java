@@ -26,7 +26,7 @@ public class ResourceBeanDefinitionParser extends AbstractRouteListParser {
 	
 	private static RouteParameters applyParameters(RouteParameters baseParameters, String method, String parameterName, String action) {
 		RouteParameters result = new RouteParameters();
-		result.routeParameters.put(parameterName, action);
+		result.parameterValues.put(parameterName, action);
 		baseParameters.metaParameters.put("methods", method);
 		
 		return result;
@@ -73,7 +73,7 @@ public class ResourceBeanDefinitionParser extends AbstractRouteListParser {
 		RouteParameters appliedParameters;
 
 		RouteParameters collectionParameters = new RouteParameters(routeParameters);
-		collectionParameters.routeParameters.put(actionParamterName, INDEX_ACTION);
+		collectionParameters.parameterValues.put(actionParamterName, INDEX_ACTION);
 		appliedParameters = applyParameters(routeParameters, GET_METHOD, actionParamterName, INDEX_ACTION);
 		list.add(RouteParserUtils.createAppliedRouteBeanDefinition(element, parserContext, collectionPattern, collectionParameters, appliedParameters));
 		
@@ -86,7 +86,7 @@ public class ResourceBeanDefinitionParser extends AbstractRouteListParser {
 		}
 		
 		RouteParameters memberParameters = new RouteParameters(routeParameters);
-		memberParameters.routeParameters.put(actionParamterName, SHOW_ACTION);
+		memberParameters.parameterValues.put(actionParamterName, SHOW_ACTION);
 		
 		appliedParameters = applyParameters(routeParameters, GET_METHOD, actionParamterName, SHOW_ACTION);
 		list.add(RouteParserUtils.createAppliedRouteBeanDefinition(element, parserContext, memberPattern, memberParameters, appliedParameters));
