@@ -34,6 +34,7 @@
 			<xsd:attribute name="name" use="required"/>
 			<xsd:attribute name="pattern" use="optional"/>
 			<xsd:attribute name="value" use="optional"/>
+			<xsd:attribute name="default" type="xsd:boolean" use="optional"/>
 		</xsd:complexType>
 	</xsd:element>
 

@@ -17,6 +17,7 @@ public class RouteParserUtils {
 	
 	public static Route createRoute(RouteParameters routeParameters) {
 		Route result = new Route(getPattern(routeParameters), routeParameters.parameterValues, routeParameters.parameterRegexes);
+		result.setDefaultStaticParameters(routeParameters.defaultStaticParameterValues);
 		result.setName(getName(routeParameters));
 		result.setMethods(getMethods(routeParameters));
 		result.setExcludedMethods(getExcludedMethods(routeParameters));
@@ -53,7 +54,7 @@ public class RouteParserUtils {
 		UrlPattern appliedPattern = pattern.apply(applyParameters.parameterValues, baseParameters.parameterValues);
 		
 		builder.addPropertyValue("urlPattern", appliedPattern);
-		builder.addPropertyValue("parameters", routeParameters);
+		builder.addPropertyValue("staticParameters", routeParameters);
 		addPropertyValues(builder, baseParameters);
 		
 		return builder.getBeanDefinition();
@@ -65,13 +66,14 @@ public class RouteParserUtils {
 		builder.getRawBeanDefinition().setSource(parserContext.extractSource(element));
 
 		builder.addPropertyValue("urlPattern", pattern);
-		builder.addPropertyValue("parameters", routeParameters.parameterValues);
+		builder.addPropertyValue("staticParameters", routeParameters.parameterValues);
 		addPropertyValues(builder, routeParameters);
 		
 		return builder.getBeanDefinition();
 	}
 	
 	private static void addPropertyValues(BeanDefinitionBuilder builder, RouteParameters routeParameters) {
+		builder.addPropertyValue("defaultStaticParameters", routeParameters.defaultStaticParameterValues);
 		builder.addPropertyValue("name", getName(routeParameters));
 		builder.addPropertyValue("methods", getMethods(routeParameters));
 		builder.addPropertyValue("excludedMethods", getExcludedMethods(routeParameters));
@@ -129,28 +131,39 @@ public class RouteParserUtils {
 			}
 		}
 		
+		applyRouteParameterTags(element, result);
+		
+		return result;
+	}
+	
+	public static void applyRouteParameterTags(Element element, RouteParameters routeParameters) {
 		NodeList children = element.getChildNodes();
 		
 		for (int i = 0; i < children.getLength(); i++) {
 			Node node = children.item(i);
 			if (node instanceof Element) {
 				Element child =  (Element) node;
-				applyParameter(child, result);
+				if (child.getTagName().equals("parameter")) {
+					applyParameter(child, routeParameters);
+				}
 			}
 		}
-		
-		return result;
 	}
 
 	private static void applyParameter(Element element, RouteParameters routeParameters) {
-		if (element.getTagName().equals("parameter")) {
-			String name = element.getAttribute("name");
-			if (element.hasAttribute("value")) {
-				routeParameters.parameterValues.put(name, element.getAttribute("value"));
+		String name = element.getAttribute("name");
+		if (element.hasAttribute("value")) {
+			String value = element.getAttribute("value");
+			routeParameters.parameterValues.put(name, value);
+			if (element.hasAttribute("default")) {
+				boolean defaultStaticParameter = Boolean.valueOf(element.getAttribute("default"));
+				if (defaultStaticParameter) {
+					routeParameters.defaultStaticParameterValues.put(name, value);
+				}
 			}
-			if (element.hasAttribute("pattern")) {
-				routeParameters.parameterRegexes.put(name, element.getAttribute("pattern"));
-			}
+		}
+		if (element.hasAttribute("pattern")) {
+			routeParameters.parameterRegexes.put(name, element.getAttribute("pattern"));
 		}
 	}
 }

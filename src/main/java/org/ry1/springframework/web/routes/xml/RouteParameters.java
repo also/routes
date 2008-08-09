@@ -7,6 +7,7 @@ import java.util.HashMap;
 class RouteParameters implements Cloneable {
 	public HashMap<String, String> metaParameters;
 	public HashMap<String, String> parameterValues;
+	public HashMap<String, String> defaultStaticParameterValues;
 	public HashMap<String, String> parameterRegexes;
 	
 	public RouteParameters() {
@@ -17,6 +18,7 @@ class RouteParameters implements Cloneable {
 		if (that != null) {
 			metaParameters = new HashMap<String, String>(that.metaParameters);
 			parameterValues = new HashMap<String, String>(that.parameterValues);
+			defaultStaticParameterValues = new HashMap<String, String>(that.defaultStaticParameterValues);
 			parameterRegexes = new HashMap<String, String>(that.parameterRegexes);
 		}
 		else {
@@ -27,6 +29,7 @@ class RouteParameters implements Cloneable {
 	private void initDefault() {
 		metaParameters = new HashMap<String, String>();
 		parameterValues = new HashMap<String, String>();
+		defaultStaticParameterValues = new HashMap<String, String>();
 		parameterRegexes = new HashMap<String, String>();
 	}
 	

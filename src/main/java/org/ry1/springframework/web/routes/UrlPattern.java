@@ -179,7 +179,10 @@ public class UrlPattern implements Cloneable {
 				if (segment instanceof ParameterSegment) {
 					ParameterSegment parameter = (ParameterSegment) segment;
 					String value = matcher.group(matchNumber++);
-					result.put(parameter.name, value.equals("") ? null : value);
+					
+					if (!value.equals("")) {
+						result.put(parameter.name, value);
+					}
 				}
 			}
 		}

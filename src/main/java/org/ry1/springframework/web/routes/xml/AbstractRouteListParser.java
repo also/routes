@@ -17,7 +17,6 @@ public abstract class AbstractRouteListParser extends AbstractSingleBeanDefiniti
 		return ListFactoryBean.class;
 	}
 	
-	@SuppressWarnings("unchecked")
 	@Override
 	protected void doParse(Element element, ParserContext parserContext, BeanDefinitionBuilder builder) {
 		ManagedList list = new ManagedList();
