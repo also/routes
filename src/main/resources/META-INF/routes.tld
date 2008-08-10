@@ -13,14 +13,14 @@
 
 	<tag>
 		<name>url</name>
-		<tag-class>org.ry1.springframework.web.routes.tags.UrlTag</tag-class>
+		<tag-class>com.ryanberdeen.routes.tags.UrlTag</tag-class>
 		<body-content>empty</body-content>
 		<dynamic-attributes>true</dynamic-attributes>
 	</tag>
 
 	<tag>
 		<name>a</name>
-		<tag-class>org.ry1.springframework.web.routes.tags.AnchorTag</tag-class>
+		<tag-class>com.ryanberdeen.routes.tags.AnchorTag</tag-class>
 		<body-content>scriptless</body-content>
 		<dynamic-attributes>true</dynamic-attributes>
 	</tag>

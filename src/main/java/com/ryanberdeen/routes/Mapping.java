@@ -1,6 +1,6 @@
 /* $Id$ */
 
-package org.ry1.springframework.web.routes;
+package com.ryanberdeen.routes;
 
 import java.util.Collections;
 import java.util.Map;

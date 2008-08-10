@@ -1,6 +1,6 @@
 /* $Id$ */
 
-package org.ry1.springframework.web.routes.tags;
+package com.ryanberdeen.routes.tags;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -11,7 +11,7 @@ import javax.servlet.jsp.PageContext;
 import javax.servlet.jsp.tagext.DynamicAttributes;
 import javax.servlet.jsp.tagext.SimpleTagSupport;
 
-import org.ry1.springframework.web.routes.RouteUtils;
+import com.ryanberdeen.routes.RouteUtils;
 
 public abstract class AbstractUrlTag extends SimpleTagSupport implements DynamicAttributes {
 	private HashMap<String, Object> parameters = new HashMap<String, Object>();

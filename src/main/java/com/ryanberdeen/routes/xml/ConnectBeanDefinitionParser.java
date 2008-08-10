@@ -1,6 +1,6 @@
 /* $Id$ */
 
-package org.ry1.springframework.web.routes.xml;
+package com.ryanberdeen.routes.xml;
 
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.beans.factory.xml.BeanDefinitionParser;

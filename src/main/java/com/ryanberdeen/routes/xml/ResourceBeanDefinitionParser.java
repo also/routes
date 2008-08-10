@@ -1,16 +1,17 @@
 /* $Id$ */
 
-package org.ry1.springframework.web.routes.xml;
+package com.ryanberdeen.routes.xml;
 
 import java.util.ArrayList;
 
-import org.ry1.springframework.web.routes.UrlPattern;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.beans.factory.support.ManagedList;
 import org.springframework.beans.factory.xml.ParserContext;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
+
+import com.ryanberdeen.routes.UrlPattern;
 
 public class ResourceBeanDefinitionParser extends AbstractRouteListParser {
 	private static final String GET_METHOD = "GET";

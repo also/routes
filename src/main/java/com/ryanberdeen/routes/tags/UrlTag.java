@@ -1,6 +1,6 @@
 /* $Id$ */
 
-package org.ry1.springframework.web.routes.tags;
+package com.ryanberdeen.routes.tags;
 
 import java.io.IOException;
 

@@ -1,6 +1,6 @@
 /* $Id$ */
 
-package org.ry1.springframework.web.routes;
+package com.ryanberdeen.routes;
 
 import java.io.InputStreamReader;
 import java.io.PrintWriter;

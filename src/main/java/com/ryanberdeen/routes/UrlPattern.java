@@ -1,4 +1,4 @@
-package org.ry1.springframework.web.routes;
+package com.ryanberdeen.routes;
 
 import java.util.ArrayList;
 import java.util.HashMap;

@@ -1,11 +1,12 @@
-package org.ry1.springframework.web.routes.xml;
+package com.ryanberdeen.routes.xml;
 
 import java.util.Map;
 import java.util.Set;
 
-import org.ry1.springframework.web.routes.Route;
 import org.springframework.beans.factory.FactoryBean;
 import org.springframework.beans.factory.InitializingBean;
+
+import com.ryanberdeen.routes.Route;
 
 public class AppliedRouteFactoryBean implements FactoryBean, InitializingBean {
 	private Route route;
