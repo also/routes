@@ -442,7 +442,7 @@ public class UrlPattern implements Cloneable {
 		public UrlSegment apply(Map<String, String> parameters, Map<String, String> defaultParameters) {
 			String value = parameters.get(name);
 			if (value != null) {
-				return new StaticSegment(value, required);
+				return new StaticSegment(value, !defaultParameters.containsKey(name));
 			}
 			else {
 				return clone();

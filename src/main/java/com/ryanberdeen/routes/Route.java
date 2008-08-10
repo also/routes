@@ -14,21 +14,22 @@ public class Route {
 	public static final Map<String, String> NO_PARAMETER_VALUES = Collections.emptyMap();
 	
 	private String name;
+	private Map<String, String> staticParameterValues;
+	private Map<String, String> defaultStaticParameterValues;
 	
 	/** The parameters that are required to generate a URL for this route.
 	 * These parameters must be present in {@link #match(Map, Map)} for the 
 	 * route to match. */
-	private ArrayList<String> requiredUrlParameters;
-	private Map<String, String> staticParameters;
-	private Map<String, String> defaultStaticParameters;
-	private HashMap<String, String> requiredStaticParameters;
+	private ArrayList<String> requiredUrlParameterNames;
+	private HashMap<String, String> requiredStaticParameterValues;
+	private HashMap<String, String> optionalStaticParameterValues;
 	private Set<String> methods;
 	private Set<String> excludedMethods;
 	private UrlPattern urlPattern;
 
 	public Route() {
-		staticParameters = NO_PARAMETER_VALUES;
-		defaultStaticParameters = NO_PARAMETER_VALUES;
+		staticParameterValues = NO_PARAMETER_VALUES;
+		defaultStaticParameterValues = NO_PARAMETER_VALUES;
 	}
 
 	/** Creates a new unnamed route.
@@ -38,7 +39,7 @@ public class Route {
 	public Route(String pattern, Map<String, String> staticParameters, Map<String, String> parameterRegexes) {
 		this();
 		this.urlPattern = UrlPattern.parse(pattern, staticParameters.keySet(), parameterRegexes);
-		this.staticParameters = staticParameters;
+		this.staticParameterValues = staticParameters;
 	}
 	
 	public void setName(String name) {
@@ -54,7 +55,7 @@ public class Route {
 	 * applied.
 	 */
 	public void setStaticParameters(Map<String, String> staticParameters) {
-		this.staticParameters = staticParameters;
+		this.staticParameterValues = staticParameters;
 	}
 	
 	/** Set the default static parameters. Default these defaults are included in the
@@ -64,7 +65,7 @@ public class Route {
 	 * @param defaultStaticParameters
 	 */
 	public void setDefaultStaticParameters(Map<String, String> defaultStaticParameters) {
-		this.defaultStaticParameters = defaultStaticParameters;
+		this.defaultStaticParameterValues = defaultStaticParameters;
 	}
 
 	/** Sets the allowed methods. The default allows any method.
@@ -83,24 +84,29 @@ public class Route {
 	 * and the URL's parameters.
 	 */
 	public void prepare() {
-		requiredStaticParameters = new HashMap<String, String>(staticParameters);
-
-		requiredUrlParameters = new ArrayList<String>();
+		requiredStaticParameterValues = new HashMap<String, String>(staticParameterValues);
+		optionalStaticParameterValues = new HashMap<String, String>();
+		
+		requiredUrlParameterNames = new ArrayList<String>();
 
 		for (String parameterName : urlPattern.getParameterNames()) {
 			// parameters that occur in the URL don't have a required static value
-			String value = requiredStaticParameters.remove(parameterName);
+			String value = requiredStaticParameterValues.remove(parameterName);
 			
 			// parameter that occur in the URL but not in the static parameters or default must have a value
-			if (value == null && !defaultStaticParameters.containsKey(parameterName)) {
-				requiredUrlParameters.add(parameterName);
+			if (value == null && !defaultStaticParameterValues.containsKey(parameterName)) {
+				requiredUrlParameterNames.add(parameterName);
 			}
 		}
 		
 		// static parameters that have the default value aren't required
-		for (Map.Entry<String, String> defaultStaticParameter : defaultStaticParameters.entrySet()) {
-			if (defaultStaticParameter.getValue().equals(requiredStaticParameters.get(defaultStaticParameter.getKey()))) {
-				requiredStaticParameters.remove(defaultStaticParameter.getKey());
+		for (Map.Entry<String, String> defaultStaticParameter : defaultStaticParameterValues.entrySet()) {
+			String parameterName = defaultStaticParameter.getKey();
+			String defaultParameterValue = defaultStaticParameter.getValue();
+			
+			if (defaultParameterValue.equals(requiredStaticParameterValues.get(parameterName))) {
+				requiredStaticParameterValues.remove(defaultStaticParameter.getKey());
+				optionalStaticParameterValues.put(parameterName, defaultParameterValue);
 			}
 		}
 	}
@@ -125,8 +131,8 @@ public class Route {
 
 		Map<String, String> urlMatches = urlPattern.match(url);
 		if (urlMatches != null) {
-			result = new HashMap<String, String>(defaultStaticParameters);
-			result.putAll(staticParameters);
+			result = new HashMap<String, String>(defaultStaticParameterValues);
+			result.putAll(staticParameterValues);
 			result.putAll(urlMatches);
 		}
 
@@ -140,16 +146,16 @@ public class Route {
 	 */
 	public int match(Map<String, Object> parameters, Map<String, String> contextParameters) {
 		// make sure all required url parameters are provided
-		for (String requiredParameter : requiredUrlParameters) {
+		for (String requiredParameter : requiredUrlParameterNames) {
 			if (!parameters.containsKey(requiredParameter) && !contextParameters.containsKey(requiredParameter)) {
 				return -1;
 			}
 		}
 
-		int matchCount = requiredUrlParameters.size();
+		int matchCount = requiredUrlParameterNames.size();
 
 		// make sure all static parameters match
-		for (Map.Entry<String, String> staticParameter : requiredStaticParameters.entrySet()) {
+		for (Map.Entry<String, String> staticParameter : requiredStaticParameterValues.entrySet()) {
 			String key = staticParameter.getKey();
 			Object parameterValue = parameters.get(key);
 			if (parameterValue == null) {
@@ -162,6 +168,22 @@ public class Route {
 
 			matchCount++;
 		}
+		
+		for (Map.Entry<String, String> optionalStaticParameter: optionalStaticParameterValues.entrySet()) {
+			String key = optionalStaticParameter.getKey();
+			Object parameterValue = parameters.get(key);
+			if (parameterValue == null) {
+				parameterValue = contextParameters.get(key);
+			}
+			
+			if (parameterValue != null) {
+				if (!optionalStaticParameter.getValue().equals(parameterValue)) {
+					return -1;
+				}
+	
+				matchCount++;
+			}
+		}
 
 		return matchCount;
 	}
@@ -169,15 +191,15 @@ public class Route {
 	public Route apply(Map<String, String> parameters, Set<String> methods, Set<String> excludedMethods) {
 		Route result = new Route();
 
-		result.urlPattern = urlPattern.apply(parameters, staticParameters);
-		result.staticParameters = new HashMap<String, String>(this.staticParameters);
-		result.staticParameters.putAll(parameters);
+		result.urlPattern = urlPattern.apply(parameters, staticParameterValues);
+		result.staticParameterValues = new HashMap<String, String>(this.staticParameterValues);
+		result.staticParameterValues.putAll(parameters);
 		result.prepare();
 		return result;
 	}
 
 	public String buildUrl(Map<String, Object> parameters, Map<String, String> contextParameters) {
-		return urlPattern.buildUrl(parameters, staticParameters, contextParameters);
+		return urlPattern.buildUrl(parameters, staticParameterValues, contextParameters);
 	}
 
 	public UrlPattern getUrlPattern() {
