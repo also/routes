@@ -88,6 +88,7 @@ public class ResourceBeanDefinitionParser extends AbstractRouteListParser {
 		
 		RouteParameters memberParameters = new RouteParameters(routeParameters);
 		memberParameters.parameterValues.put(actionParamterName, SHOW_ACTION);
+		memberParameters.defaultStaticParameterValues.put(actionParamterName, SHOW_ACTION);
 		
 		appliedParameters = applyParameters(routeParameters, GET_METHOD, actionParamterName, SHOW_ACTION);
 		list.add(RouteParserUtils.createAppliedRouteBeanDefinition(element, parserContext, memberPattern, memberParameters, appliedParameters));
