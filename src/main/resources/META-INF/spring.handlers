@@ -1,2 +1,2 @@
 # $Id$
-http\://ry1.org/schema/routes=com.ryanberdeen.routes.xml.RoutesNamespaceHandler
+http\://ryanberdeen.com/routes/schema=com.ryanberdeen.routes.xml.RoutesNamespaceHandler
