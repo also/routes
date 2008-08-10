@@ -9,7 +9,7 @@
 	
 	<tlib-version>1.0</tlib-version>
 	<short-name>routes</short-name>
-	<uri>http://ry1.org/tags/routes</uri>
+	<uri>http://ryanberdeen.com/routes/tags</uri>
 
 	<tag>
 		<name>url</name>
