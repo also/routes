@@ -21,7 +21,6 @@ public class Route {
 	private ArrayList<String> requiredUrlParameters;
 	private Map<String, String> staticParameters;
 	private Map<String, String> defaultStaticParameters;
-	private HashMap<String, String> defaultParameters;
 	private HashMap<String, String> requiredStaticParameters;
 	private Set<String> methods;
 	private Set<String> excludedMethods;
@@ -86,16 +85,14 @@ public class Route {
 	public void prepare() {
 		requiredStaticParameters = new HashMap<String, String>(staticParameters);
 
-		defaultParameters = new HashMap<String, String>();
 		requiredUrlParameters = new ArrayList<String>();
 
 		for (String parameterName : urlPattern.getParameterNames()) {
+			// parameters that occur in the URL don't have a required static value
 			String value = requiredStaticParameters.remove(parameterName);
 			
-			if (value != null) {
-				defaultParameters.put(parameterName, value);
-			}
-			else if (!defaultStaticParameters.containsKey(parameterName)) {
+			// parameter that occur in the URL but not in the static parameters or default must have a value
+			if (value == null && !defaultStaticParameters.containsKey(parameterName)) {
 				requiredUrlParameters.add(parameterName);
 			}
 		}
@@ -172,7 +169,7 @@ public class Route {
 	public Route apply(Map<String, String> parameters, Set<String> methods, Set<String> excludedMethods) {
 		Route result = new Route();
 
-		result.urlPattern = urlPattern.apply(parameters, defaultParameters);
+		result.urlPattern = urlPattern.apply(parameters, staticParameters);
 		result.staticParameters = new HashMap<String, String>(this.staticParameters);
 		result.staticParameters.putAll(parameters);
 		result.prepare();
@@ -180,7 +177,7 @@ public class Route {
 	}
 
 	public String buildUrl(Map<String, Object> parameters, Map<String, String> contextParameters) {
-		return urlPattern.buildUrl(parameters, defaultParameters, contextParameters);
+		return urlPattern.buildUrl(parameters, staticParameters, contextParameters);
 	}
 
 	public UrlPattern getUrlPattern() {
