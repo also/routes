@@ -192,10 +192,10 @@ public class UrlPattern implements Cloneable {
 	
 	/** Builds a URL using the parameters.
 	 */
-	public String buildUrl(Map<String, Object> parameters, Map<String, String> defaultParameters, Map<String, String> contextParameters) {
+	public String buildUrl(Map<String, Object> parameters, Map<String, String> staticParameterValues, Map<String, String> contextParameters) {
 		UrlBuilder urlBuilder = new UrlBuilder();
 		for (UrlSegment segment : segments) {
-			segment.appendUrl(urlBuilder, parameters, defaultParameters, contextParameters);
+			segment.appendUrl(urlBuilder, parameters, staticParameterValues, contextParameters);
 		}
 		
 		return urlBuilder.toString();
@@ -213,11 +213,11 @@ public class UrlPattern implements Cloneable {
 		return templateBuilder.toString();
 	}
 	
-	public UrlPattern apply(Map<String, String> parameters, Map<String, String> defaultParameters) {
+	public UrlPattern apply(Map<String, String> parameters, Map<String, String> staticParameterValues) {
 		UrlPattern result = new UrlPattern();
 		
 		for (UrlSegment segment : segments) {
-			result.append(segment.apply(parameters, defaultParameters));
+			result.append(segment.apply(parameters, staticParameterValues));
 		}
 		
 		return result;
@@ -333,7 +333,7 @@ public class UrlPattern implements Cloneable {
 		 */
 		public void appendTemplate(StringBuilder templateBuilder);
 		
-		public UrlSegment apply(Map<String, String> parameters, Map<String, String> defaultParameters);
+		public UrlSegment apply(Map<String, String> parameters, Map<String, String> staticParameterValues);
 		
 		public UrlSegment clone();
 	}
@@ -361,7 +361,7 @@ public class UrlPattern implements Cloneable {
 			}
 		}
 		
-		public void appendUrl(UrlBuilder urlBuilder, Map<String, Object> parameters, Map<String, String> staticParameters, Map<String, String> contextParameters) {
+		public void appendUrl(UrlBuilder urlBuilder, Map<String, Object> parameters, Map<String, String> staticParameterValues, Map<String, String> contextParameters) {
 			urlBuilder.append(value, required);
 		}
 		
@@ -369,7 +369,7 @@ public class UrlPattern implements Cloneable {
 			templateBuilder.append(value);
 		}
 		
-		public UrlSegment apply(Map<String, String> parameters, Map<String, String> defaultParameters) {
+		public StaticSegment apply(Map<String, String> parameters, Map<String, String> staticParameterValues) {
 			return clone();
 		}
 		
@@ -419,10 +419,10 @@ public class UrlPattern implements Cloneable {
 			regexBuilder.append(')');
 		}
 		
-		public void appendUrl(UrlBuilder urlBuilder, Map<String, Object> parameters, Map<String, String> staticParameters, Map<String, String> contextParameters) {
+		public void appendUrl(UrlBuilder urlBuilder, Map<String, Object> parameters, Map<String, String> staticParameterValues, Map<String, String> contextParameters) {
 			Object result = parameters.get(name);
 			if (result == null) {
-				result = staticParameters.get(name);
+				result = staticParameterValues.get(name);
 				if (result == null) {
 					String contextValue = contextParameters.get(name);
 					if (contextValue != null) {
@@ -434,13 +434,13 @@ public class UrlPattern implements Cloneable {
 			if (result == null) {
 				throw new RuntimeException("No value for [" + name + "]");
 			}
-			urlBuilder.append(result, required || !result.equals(staticParameters.get(name)));
+			urlBuilder.append(result, required || !result.equals(staticParameterValues.get(name)));
 		}
 		
-		public UrlSegment apply(Map<String, String> parameters, Map<String, String> defaultParameters) {
+		public UrlSegment apply(Map<String, String> parameters, Map<String, String> staticParameterValues) {
 			String value = parameters.get(name);
 			if (value != null) {
-				return new StaticSegment(value, !value.equals(defaultParameters.get(name)));
+				return new StaticSegment(value, !value.equals(staticParameterValues.get(name)));
 			}
 			else {
 				return clone();
