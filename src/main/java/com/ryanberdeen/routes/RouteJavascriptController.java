@@ -1,5 +1,3 @@
-/* $Id$ */
-
 package com.ryanberdeen.routes;
 
 import java.io.InputStreamReader;

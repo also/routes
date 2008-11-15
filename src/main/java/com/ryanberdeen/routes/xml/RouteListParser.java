@@ -1,5 +1,3 @@
-/* $Id$ */
-
 package com.ryanberdeen.routes.xml;
 
 import org.springframework.beans.factory.support.ManagedList;

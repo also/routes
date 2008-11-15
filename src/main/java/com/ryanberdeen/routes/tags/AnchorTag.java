@@ -1,5 +1,3 @@
-/* $Id$ */
-
 package com.ryanberdeen.routes.tags;
 
 import java.io.IOException;

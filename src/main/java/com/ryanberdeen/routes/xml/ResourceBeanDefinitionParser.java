@@ -1,5 +1,3 @@
-/* $Id$ */
-
 package com.ryanberdeen.routes.xml;
 
 import java.util.ArrayList;

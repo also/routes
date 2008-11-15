@@ -1,5 +1,3 @@
-/* $Id$ */
-
 package org.ry1.springframework.web.util;
 
 import java.util.HashMap;

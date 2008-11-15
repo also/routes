@@ -1,5 +1,3 @@
-/* $Id$ */
-
 var Routes = {
 	url: function(name, parameters) {
 		var pattern = Routes.get(name);
