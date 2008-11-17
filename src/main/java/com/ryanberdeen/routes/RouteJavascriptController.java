@@ -44,6 +44,7 @@ public class RouteJavascriptController implements Controller, LastModified {
 			writer.write('\'');
 			writer.write(entry.getKey());
 			writer.write("':'");
+			writer.write(request.getContextPath());
 			writer.write(entry.getValue().getUrlPattern().getStringTemplate());
 			writer.write('\'');
 			
