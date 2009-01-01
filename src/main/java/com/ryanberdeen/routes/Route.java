@@ -6,8 +6,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
-import javax.servlet.http.HttpServletRequest;
-
 public class Route {
 	public static final Map<String, String> NO_PARAMETER_VALUES = Collections.emptyMap();
 	
@@ -117,11 +115,11 @@ public class Route {
 	 * URL pattern, and the request {@link HttpServletRequest#getMethod() method}
 	 * must be included an allowed and not excluded method.
 	 */
-	public Map<String, String> match(String url, HttpServletRequest request) {
-		if (methods != null && !methods.contains(request.getMethod())) {
+	public Map<String, String> match(String url, String method) {
+		if (methods != null && !methods.contains(method)) {
 			return null;
 		}
-		if (excludedMethods != null && methods.contains(request.getMethod())) {
+		if (excludedMethods != null && methods.contains(method)) {
 			return null;
 		}
 

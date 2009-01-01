@@ -3,11 +3,11 @@ package com.ryanberdeen.routes;
 import javax.servlet.ServletContext;
 
 public class RouteUtils {
-	public static Mapping getMapping(ServletContext servletContext) {
-		return (Mapping) servletContext.getAttribute(Mapping.class.getName());
+	public static HttpServletRequestMapping getMapping(ServletContext servletContext) {
+		return (HttpServletRequestMapping) servletContext.getAttribute(HttpServletRequestMapping.class.getName());
 	}
 	
-	public static void setMapping(ServletContext servletContext, Mapping mapping) {
-		servletContext.setAttribute(Mapping.class.getName(), mapping);
+	public static void setMapping(ServletContext servletContext, HttpServletRequestMapping mapping) {
+		servletContext.setAttribute(HttpServletRequestMapping.class.getName(), mapping);
 	}
 }

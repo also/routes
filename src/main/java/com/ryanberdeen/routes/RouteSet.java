@@ -13,7 +13,7 @@ import javax.servlet.http.HttpServletRequest;
 import org.ry1.springframework.web.util.ExtendedParameters;
 import org.ry1.springframework.web.util.ExtendedParameters.Strategy;
 
-public class RouteSet implements Mapping {
+public class RouteSet implements HttpServletRequestMapping {
 	/** The request attribute under which the matching Route is bound. */
 	public static final String MATCHER_ATTRIBUTE_NAME = RouteSet.class.getName() + ".matcher";
 
@@ -47,11 +47,11 @@ public class RouteSet implements Mapping {
 		this.contextParameterNames = contextParameterNames;
 	}
 
-	public UrlMatch getBestMatch(HttpServletRequest request, String url) throws Exception {
+	public UrlMatch getBestMatch(String method, String path) {
 		Map<String, String> parameters = null;
 
 		for (Route route: routes) {
-			parameters = route.match(url, request);
+			parameters = route.match(path, method);
 			if (parameters != null) {
 				UrlMatch match = new UrlMatch(route, parameters);
 				return match;
@@ -59,6 +59,10 @@ public class RouteSet implements Mapping {
 		}
 
 		return null;
+	}
+
+	public UrlMatch getBestMatch(HttpServletRequest request, String path) {
+		return getBestMatch(request.getMethod(), path);
 	}
 
 	public void setCurrentMatch(HttpServletRequest request, UrlMatch match) {
@@ -105,38 +109,42 @@ public class RouteSet implements Mapping {
 		return bestMatch;
 	}
 
-	public String getUrl(HttpServletRequest request, String name, Map<String, Object> parameters, boolean includeContextPath) {
-		Route route = getNamedRoute(name);
-
-		return getUrl(request, parameters, route, includeContextPath);
+	public String getPath(HttpServletRequest request, String name, Map<String, Object> parameters, boolean includeContextPath) {
+		return completePath(request, getPath(name, parameters, getContextParameters(request)), includeContextPath);
 	}
 
-	public String getUrl(HttpServletRequest request, Map<String, Object> parameters, boolean includeContextPath) {
-		Route route = getBestMatch(request, parameters);
-
-		return getUrl(request, parameters, route,includeContextPath);
-	}
-
-	public String getUrl(HttpServletRequest request, Map<String, Object> parameters, Route route, boolean includeContextPath) {
+	public String getPath(Map<String, Object> parameters, Map<String, String> contextParameters) {
+		Route route = getBestMatch(parameters, contextParameters);
 		if (route == null) {
-			return null;
+			throw new PathGenerationException("No route matches parameters " + parameters + ", contextParameters " + contextParameters);
+		}
+		return null;
+	}
+
+	public String getPath(HttpServletRequest request, Map<String, Object> parameters, boolean includeContextPath) {
+		return completePath(request, getPath(parameters, getContextParameters(request)), includeContextPath);
+	}
+
+	public String getPath(String name, Map<String, Object> parameters, Map<String, String> contextParameters) {
+		Route route = getNamedRoute(name);
+		if (route == null) {
+			throw new PathGenerationException("No route matches name " + name);
 		}
 
-		String url = "" ;
+		return buildPath(route, parameters, contextParameters);
+	}
 
-		if (includeContextPath) {
-			url = request.getContextPath();
-		}
-
-		url += route.buildUrl(parameters, getContextParameters(request));
-
+	private static String buildPath(Route route, Map<String, Object> parameters, Map<String, String> contextParameters) {
 		// FIXME query string
+		return route.buildUrl(parameters, contextParameters);
+	}
 
-		return  url;
+	private static String completePath(HttpServletRequest request, String path, boolean includeContextPath) {
+		return includeContextPath ? request.getContextPath() + path : path;
 	}
 
 	@SuppressWarnings("unchecked")
-	public Map<String, String> getContextParameters(ServletRequest request) {
+	public static Map<String, String> getContextParameters(ServletRequest request) {
 		return (Map<String, String>) request.getAttribute(CONTEXT_PARAMETERS_ATTRIBUTE_NAME);
 	}
 

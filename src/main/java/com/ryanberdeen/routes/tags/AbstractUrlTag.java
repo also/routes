@@ -9,7 +9,7 @@ import javax.servlet.jsp.PageContext;
 import javax.servlet.jsp.tagext.DynamicAttributes;
 import javax.servlet.jsp.tagext.SimpleTagSupport;
 
-import com.ryanberdeen.routes.Mapping;
+import com.ryanberdeen.routes.HttpServletRequestMapping;
 import com.ryanberdeen.routes.RouteUtils;
 
 public abstract class AbstractUrlTag extends SimpleTagSupport implements DynamicAttributes {
@@ -44,13 +44,13 @@ public abstract class AbstractUrlTag extends SimpleTagSupport implements Dynamic
 		
 		String url;
 		HttpServletRequest request = (HttpServletRequest) pageContext.getRequest();
-		Mapping mapping = RouteUtils.getMapping(pageContext.getServletContext());
+		HttpServletRequestMapping mapping = RouteUtils.getMapping(pageContext.getServletContext());
 		
 		if (name != null) {
-			url = mapping.getUrl(request, name, parameters, includeContextPath);
+			url = mapping.getPath(request, name, parameters, includeContextPath);
 		}
 		else {
-			url = mapping.getUrl(request, parameters, includeContextPath);
+			url = mapping.getPath(request, parameters, includeContextPath);
 		}
 		
 		if (url == null) {
