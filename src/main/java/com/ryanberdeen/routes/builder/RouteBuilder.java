@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 
+import com.ryanberdeen.routes.Route;
 import com.ryanberdeen.routes.UrlPattern;
 
 public class RouteBuilder implements Cloneable {
@@ -127,6 +128,15 @@ public class RouteBuilder implements Cloneable {
 
 	public UrlPattern createUrlPattern() {
 		return UrlPattern.parse(getPattern(), parameterValues.keySet(), parameterRegexes);
+	}
+
+	public Route createRoute() {
+		Route route = new Route(getPattern(), parameterValues, parameterRegexes);
+		route.setDefaultStaticParameters(defaultStaticParameterValues);
+		route.setName(getName());
+		route.setMethods(getMethods());
+		route.setExcludedMethods(getExcludedMethods());
+		return route;
 	}
 
 	public HashSet<String> getMethods() {
