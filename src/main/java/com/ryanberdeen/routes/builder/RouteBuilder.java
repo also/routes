@@ -8,7 +8,7 @@ import java.util.Map;
 import com.ryanberdeen.routes.Route;
 import com.ryanberdeen.routes.UrlPattern;
 
-public class RouteBuilder implements Cloneable {
+public class RouteBuilder implements RouteOptions, Cloneable {
 	private static final String NAME = "name";
 	private static final String NAME_PREFIX = "namePrefix";
 	private static final String PATTERN = "pattern";
@@ -125,7 +125,7 @@ public class RouteBuilder implements Cloneable {
 		return excludedMethods;
 	}
 
-	public void setOption(String optionName, String value) {
+	public RouteBuilder setOption(String optionName, String value) {
 		if (NAME.equals(optionName)) {
 			setName(value);
 		}
@@ -148,6 +148,8 @@ public class RouteBuilder implements Cloneable {
 			// TODO exception type
 			throw new RuntimeException("Invalid parameter name: " + optionName);
 		}
+
+		return this;
 	}
 
 	private static HashSet<String> parseMethodString(String value) {

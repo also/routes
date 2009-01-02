@@ -6,13 +6,34 @@ import java.util.List;
 import com.ryanberdeen.routes.Route;
 import com.ryanberdeen.routes.RouteSet;
 
-public class RouteSetBuilder implements RouteListBuilder {
+public class RouteSetBuilder implements RouteListBuilder, RouteOptions {
 	private ArrayList<RouteListBuilder> routeListBuilders = new ArrayList<RouteListBuilder>();
 
+	private RouteBuilder routeDefinition;
+
+	public RouteSetBuilder() {
+		routeDefinition = new RouteBuilder();
+	}
+
+	public RouteSetBuilder(RouteSetBuilder that) {
+		routeDefinition = new RouteBuilder(that.routeDefinition);
+	}
+
+	public RouteSetBuilder nested() {
+		RouteSetBuilder nested = new RouteSetBuilder(this);
+		routeListBuilders.add(nested);
+		return nested;
+	}
+
+	public RouteBuilder match() {
+		RouteBuilder routeDefinition = this.routeDefinition.clone();
+		routeListBuilders.add(new SingleRouteDefinition(routeDefinition));
+		return routeDefinition;
+	}
+
 	public RouteBuilder match(String pattern) {
-		RouteBuilder routeDefinition = new RouteBuilder();
+		RouteBuilder routeDefinition = match();
 		routeDefinition.setPattern(pattern);
-		add(routeDefinition);
 		return routeDefinition;
 	}
 
@@ -22,9 +43,14 @@ public class RouteSetBuilder implements RouteListBuilder {
 		return this;
 	}
 
-	public RouteSetBuilder add(Route route) {
+	public RouteOptions add(Route route) {
 		routeListBuilders.add(new SingleRoute(route));
 		return this;
+	}
+
+	@Deprecated
+	public RouteBuilder getRouteDefinition() {
+		return routeDefinition;
 	}
 
 	public RouteSet createRouteSet() {
@@ -32,6 +58,9 @@ public class RouteSetBuilder implements RouteListBuilder {
 		buildRouteList(routes);
 		RouteSet routeSet = new RouteSet();
 		routeSet.setRoutes(routes);
+		for (Route route : routes) {
+			System.out.println(route.getUrlPattern().getRegex());
+		}
 		return routeSet;
 	}
 
@@ -39,6 +68,22 @@ public class RouteSetBuilder implements RouteListBuilder {
 		for (RouteListBuilder routeListBuilder : routeListBuilders) {
 			routeListBuilder.buildRouteList(routes);
 		}
+	}
+
+	public RouteBuilder setOption(String optionName, String value) {
+		return routeDefinition.setOption(optionName, value);
+	}
+
+	public RouteBuilder setParameterValue(String name, String value) {
+		return routeDefinition.setParameterValue(name, value);
+	}
+
+	public RouteBuilder setDefaultStaticParameterValue(String name, String value) {
+		return routeDefinition.setDefaultStaticParameterValue(name, value);
+	}
+
+	public RouteBuilder setParameterRegex(String name, String regex) {
+		return routeDefinition.setParameterRegex(name, regex);
 	}
 }
 
