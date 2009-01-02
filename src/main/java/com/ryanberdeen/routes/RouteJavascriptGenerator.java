@@ -18,10 +18,9 @@ public class RouteJavascriptGenerator {
 	private HttpServletRequestMapping mapping;
 
 	/**
-	 * Creates a generator that will generate JavaScript for the specified
-	 * mapping.
+	 * Sets the mapping for which JavaScript will be generated.
 	 */
-	public RouteJavascriptGenerator(HttpServletRequestMapping mapping) {
+	public void setMapping(HttpServletRequestMapping mapping) {
 		this.mapping = mapping;
 	}
 
