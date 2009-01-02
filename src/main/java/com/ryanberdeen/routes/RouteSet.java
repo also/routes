@@ -118,7 +118,7 @@ public class RouteSet implements HttpServletRequestMapping {
 		if (route == null) {
 			throw new PathGenerationException("No route matches parameters " + parameters + ", contextParameters " + contextParameters);
 		}
-		return null;
+		return buildPath(route, parameters, contextParameters);
 	}
 
 	public String getPath(HttpServletRequest request, Map<String, Object> parameters, boolean includeContextPath) {
