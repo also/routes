@@ -31,14 +31,21 @@ public class RouteBuilder implements Cloneable {
 	private static final String PUT_METHOD = "PUT";
 	private static final String DELETE_METHOD = "DELETE";
 
+	@Deprecated
 	public HashMap<String, String> parameterValues;
+	@Deprecated
 	public HashMap<String, String> defaultStaticParameterValues;
+	@Deprecated
 	public HashMap<String, String> parameterRegexes;
 
+	@Deprecated
 	public ArrayList<String> defaultResourceCollectionActions;
+	@Deprecated
 	public HashMap<String, String> defaultResourceCollectionActionMethods;
 
+	@Deprecated
 	public HashMap<String, String> defaultResourceMemberActionMethods;
+	@Deprecated
 	public ArrayList<String> defaultResourceMemberActions;
 
 	private String name;
@@ -149,7 +156,7 @@ public class RouteBuilder implements Cloneable {
 
 	public void setOption(String optionName, String value) {
 		if (NAME.equals(optionName)) {
-			name = value;
+			setName(value);
 		}
 		else if (NAME_PREFIX.equals(optionName)) {
 			namePrefix = optionName;
@@ -191,6 +198,11 @@ public class RouteBuilder implements Cloneable {
 		return methods;
 	}
 
+	public RouteBuilder setName(String name) {
+		this.name = name;
+		return this;
+	}
+
 	public String getName() {
 		String result = name;
 		if (name != null) {
@@ -198,6 +210,16 @@ public class RouteBuilder implements Cloneable {
 		}
 
 		return result;
+	}
+
+	public RouteBuilder setPattern(String pattern) {
+		this.pattern = pattern;
+		return this;
+	}
+
+	public RouteBuilder setParameterValue(String name, String value) {
+		parameterValues.put(name, value);
+		return this;
 	}
 
 	public String getCollectionPattern() {
