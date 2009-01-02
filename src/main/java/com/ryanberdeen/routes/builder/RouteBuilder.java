@@ -1,9 +1,7 @@
 package com.ryanberdeen.routes.builder;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Map;
 
 import com.ryanberdeen.routes.Route;
 import com.ryanberdeen.routes.UrlPattern;
@@ -19,9 +17,10 @@ public class RouteBuilder implements RouteOptions, Cloneable {
 	@Deprecated
 	public HashMap<String, String> parameterValues;
 	@Deprecated
-	public HashMap<String, String> defaultStaticParameterValues;
-	@Deprecated
-	public HashMap<String, String> parameterRegexes;
+	HashMap<String, String> defaultStaticParameterValues;
+	private HashMap<String, String> parameterRegexes;
+
+	private HashMap<String, String> options;
 
 	private String name;
 	private String namePrefix;
@@ -29,15 +28,11 @@ public class RouteBuilder implements RouteOptions, Cloneable {
 	private String pattern;
 	private String patternPrefix;
 
-	private String collectionPattern;
-	private String memberPattern;
-
 	private HashSet<String> methods;
 	private HashSet<String> excludedMethods;
 
 	public RouteBuilder() {
 		initDefault();
-		initResourceDefault();
 	}
 
 	public RouteBuilder(RouteBuilder that) {
@@ -45,21 +40,20 @@ public class RouteBuilder implements RouteOptions, Cloneable {
 			parameterValues = new HashMap<String, String>(that.parameterValues);
 			defaultStaticParameterValues = new HashMap<String, String>(that.defaultStaticParameterValues);
 			parameterRegexes = new HashMap<String, String>(that.parameterRegexes);
+			options = new HashMap<String, String>(that.options);
 
 			name = that.name;
 			namePrefix = that.namePrefix;
 
-			pattern = that.patternPrefix;
+			pattern = that.pattern;
 			patternPrefix = that.patternPrefix;
 
 			methods = new HashSet<String>(that.methods);
 			excludedMethods = new HashSet<String>(that.excludedMethods);
-			setResourceDefault(that);
 
 		}
 		else {
 			initDefault();
-			initResourceDefault();
 		}
 	}
 
@@ -67,6 +61,7 @@ public class RouteBuilder implements RouteOptions, Cloneable {
 		parameterValues = new HashMap<String, String>();
 		defaultStaticParameterValues = new HashMap<String, String>();
 		parameterRegexes = new HashMap<String, String>();
+		options = new HashMap<String, String>();
 
 		name = null;
 		namePrefix = "";
@@ -100,23 +95,6 @@ public class RouteBuilder implements RouteOptions, Cloneable {
 		return route;
 	}
 
-	@SuppressWarnings("unchecked")
-	public Route createAppliedRoute(UrlPattern pattern, Map<String, String> applyParameters) {
-		HashMap<String, String> routeParameters = (HashMap<String, String>) parameterValues.clone();
-		routeParameters.putAll(applyParameters);
-
-		UrlPattern appliedPattern = pattern.apply(applyParameters, parameterValues);
-		Route route = new Route();
-		route.setUrlPattern(appliedPattern);
-		route.setStaticParameters(routeParameters);
-		route.setDefaultStaticParameters(defaultStaticParameterValues);
-		route.setName(getName());
-		route.setMethods(getMethods());
-		route.setExcludedMethods(getExcludedMethods());
-
-		return route;
-	}
-
 	public HashSet<String> getMethods() {
 		return methods;
 	}
@@ -144,12 +122,15 @@ public class RouteBuilder implements RouteOptions, Cloneable {
 		else if (EXCLUDED_METHODS.equals(optionName)) {
 			excludedMethods = parseMethodString(value);
 		}
-		else if (!setResourceOption(optionName, value)) {
-			// TODO exception type
-			throw new RuntimeException("Invalid parameter name: " + optionName);
+		else {
+			options.put(optionName, value);
 		}
 
 		return this;
+	}
+
+	public String getOption(String name) {
+		return options.get(name);
 	}
 
 	private static HashSet<String> parseMethodString(String value) {
@@ -197,116 +178,5 @@ public class RouteBuilder implements RouteOptions, Cloneable {
 	public RouteBuilder setParameterRegex(String name, String regex) {
 		parameterRegexes.put(name, regex);
 		return this;
-	}
-
-	/**************************************************************************
-	 * RESOURCES */
-
-	private static final String COLLECTION_PATTERN = "collectionPattern";
-	private static final String MEMBER_PATTERN = "memberPattern";
-
-	// resource actions
-	private static final String INDEX_ACTION = "index";
-	private static final String CREATE_ACTION = "create";
-	private static final String SHOW_ACTION = "show";
-	private static final String EDIT_ACTION = "edit";
-	private static final String UPDATE_ACTION = "update";
-	private static final String DESTROY_ACTION = "destroy";
-
-	// methods
-	private static final String POST_METHOD = "POST";
-	private static final String GET_METHOD = "GET";
-	private static final String PUT_METHOD = "PUT";
-	private static final String DELETE_METHOD = "DELETE";
-
-	@Deprecated
-	public ArrayList<String> defaultResourceCollectionActions;
-	@Deprecated
-	public HashMap<String, String> defaultResourceCollectionActionMethods;
-
-	@Deprecated
-	public HashMap<String, String> defaultResourceMemberActionMethods;
-	@Deprecated
-	public ArrayList<String> defaultResourceMemberActions;
-
-	@Deprecated
-	private void setResourceDefault(RouteBuilder that) {
-		defaultResourceMemberActionMethods = new HashMap<String, String>(that.defaultResourceMemberActionMethods);
-		defaultResourceCollectionActions = new ArrayList<String>(that.defaultResourceCollectionActions);
-		defaultResourceMemberActions = new ArrayList<String>(that.defaultResourceMemberActions);
-
-		collectionPattern = that.collectionPattern;
-		memberPattern = that.memberPattern;
-	}
-
-	@Deprecated
-	private void initResourceDefault() {
-		defaultResourceCollectionActions = new ArrayList<String>();
-		defaultResourceCollectionActions.add(INDEX_ACTION);
-
-		defaultResourceCollectionActionMethods = new HashMap<String, String>();
-		defaultResourceCollectionActionMethods.put(POST_METHOD, CREATE_ACTION);
-
-		defaultResourceMemberActions = new ArrayList<String>();
-		defaultResourceMemberActions.add(SHOW_ACTION);
-		defaultResourceMemberActions.add(EDIT_ACTION);
-
-		defaultResourceMemberActionMethods = new HashMap<String, String>();
-		defaultResourceMemberActionMethods.put(GET_METHOD, SHOW_ACTION);
-		defaultResourceMemberActionMethods.put(PUT_METHOD, UPDATE_ACTION);
-		defaultResourceMemberActionMethods.put(DELETE_METHOD, DESTROY_ACTION);
-
-		collectionPattern = ":action";
-		memberPattern = ":id/:action";
-	}
-
-	@Deprecated
-	private boolean setResourceOption(String optionName, String value) {
-		if (COLLECTION_PATTERN.equals(optionName)) {
-			collectionPattern = value;
-		}
-		else if (MEMBER_PATTERN.equals(optionName)) {
-			memberPattern = value;
-		}
-		else {
-			return false;
-		}
-		return true;
-	}
-
-	@Deprecated
-	public String getCollectionPattern() {
-		return collectionPattern;
-	}
-
-	@Deprecated
-	public String getMemberPattern() {
-		return memberPattern;
-	}
-
-	@Deprecated
-	public HashMap<String, String> getDefaultResourceMemberActionMethods() {
-		return defaultResourceMemberActionMethods;
-	}
-
-	@Deprecated
-	public RouteBuilder createMemberBuilder() {
-		RouteBuilder result = clone();
-		result.parameterValues.put(getActionParamterName(), SHOW_ACTION);
-		result.defaultStaticParameterValues.put(getActionParamterName(), SHOW_ACTION);
-		return result;
-	}
-
-	@Deprecated
-	public RouteBuilder createCollectionBuilder() {
-		RouteBuilder result = clone();
-		result.parameterValues.put(getActionParamterName(), INDEX_ACTION);
-		result.defaultStaticParameterValues.put(getActionParamterName(), INDEX_ACTION);
-		return result;
-	}
-
-	@Deprecated
-	public String getActionParamterName() {
-		return "action";
 	}
 }
