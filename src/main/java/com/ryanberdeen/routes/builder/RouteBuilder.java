@@ -3,6 +3,7 @@ package com.ryanberdeen.routes.builder;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 
 import com.ryanberdeen.routes.Route;
 import com.ryanberdeen.routes.UrlPattern;
@@ -99,6 +100,23 @@ public class RouteBuilder implements Cloneable {
 		return route;
 	}
 
+	@SuppressWarnings("unchecked")
+	public Route createAppliedRoute(UrlPattern pattern, Map<String, String> applyParameters) {
+		HashMap<String, String> routeParameters = (HashMap<String, String>) parameterValues.clone();
+		routeParameters.putAll(applyParameters);
+
+		UrlPattern appliedPattern = pattern.apply(applyParameters, parameterValues);
+		Route route = new Route();
+		route.setUrlPattern(appliedPattern);
+		route.setStaticParameters(routeParameters);
+		route.setDefaultStaticParameters(defaultStaticParameterValues);
+		route.setName(getName());
+		route.setMethods(getMethods());
+		route.setExcludedMethods(getExcludedMethods());
+
+		return route;
+	}
+
 	public HashSet<String> getMethods() {
 		return methods;
 	}
@@ -166,6 +184,16 @@ public class RouteBuilder implements Cloneable {
 
 	public RouteBuilder setParameterValue(String name, String value) {
 		parameterValues.put(name, value);
+		return this;
+	}
+
+	public RouteBuilder setDefaultStaticParameterValue(String name, String value) {
+		defaultStaticParameterValues.put(name, value);
+		return this;
+	}
+
+	public RouteBuilder setParameterRegex(String name, String regex) {
+		parameterRegexes.put(name, regex);
 		return this;
 	}
 
