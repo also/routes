@@ -19,7 +19,7 @@ public class RouteSetBuilder implements RouteListBuilder, RouteOptions {
 		routeDefinition = new RouteBuilder();
 	}
 
-	public RouteSetBuilder(RouteSetBuilder that) {
+	private RouteSetBuilder(RouteSetBuilder that) {
 		templates = new HashMap<String, RouteSetBuilderTemplate>(that.templates);
 		routeDefinition = new RouteBuilder(that.routeDefinition);
 	}
@@ -31,7 +31,7 @@ public class RouteSetBuilder implements RouteListBuilder, RouteOptions {
 	}
 
 	public RouteBuilder match() {
-		RouteBuilder routeDefinition = this.routeDefinition.clone();
+		RouteBuilder routeDefinition = new RouteBuilder(this.routeDefinition);
 		routeListBuilders.add(new SingleRouteDefinition(routeDefinition));
 		return routeDefinition;
 	}
@@ -40,17 +40,6 @@ public class RouteSetBuilder implements RouteListBuilder, RouteOptions {
 		RouteBuilder routeDefinition = match();
 		routeDefinition.setPattern(pattern);
 		return routeDefinition;
-	}
-
-	public RouteSetBuilder add(RouteBuilder routeDefinition) {
-		// TODO don't clone route definitions once they are separate from builder
-		routeListBuilders.add(new SingleRouteDefinition(routeDefinition.clone()));
-		return this;
-	}
-
-	public RouteSetBuilder add(Route route) {
-		routeListBuilders.add(new SingleRoute(route));
-		return this;
 	}
 
 	// TODO should return RouteBuilder
@@ -67,7 +56,7 @@ public class RouteSetBuilder implements RouteListBuilder, RouteOptions {
 		route.setMethods(routeDefinition.getMethods());
 		route.setExcludedMethods(routeDefinition.getExcludedMethods());
 
-		add(route);
+		routeListBuilders.add(new SingleRoute(route));
 
 		return route;
 	}

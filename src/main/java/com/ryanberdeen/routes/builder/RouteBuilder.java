@@ -35,7 +35,7 @@ public class RouteBuilder implements RouteOptions, Cloneable {
 		initDefault();
 	}
 
-	public RouteBuilder(RouteBuilder that) {
+	RouteBuilder(RouteBuilder that) {
 		if (that != null) {
 			parameterValues = new HashMap<String, String>(that.parameterValues);
 			defaultStaticParameterValues = new HashMap<String, String>(that.defaultStaticParameterValues);
@@ -73,20 +73,15 @@ public class RouteBuilder implements RouteOptions, Cloneable {
 		excludedMethods = new HashSet<String>();
 	}
 
-	@Override
-	protected RouteBuilder clone() {
-		return new RouteBuilder(this);
-	}
-
-	public String getPattern() {
+	private String getPattern() {
 		return patternPrefix + pattern;
 	}
 
-	public UrlPattern createUrlPattern() {
+	UrlPattern createUrlPattern() {
 		return UrlPattern.parse(getPattern(), parameterValues.keySet(), parameterRegexes);
 	}
 
-	public Route createRoute() {
+	Route createRoute() {
 		Route route = new Route(getPattern(), parameterValues, parameterRegexes);
 		route.setDefaultStaticParameters(defaultStaticParameterValues);
 		route.setName(getName());
@@ -95,11 +90,11 @@ public class RouteBuilder implements RouteOptions, Cloneable {
 		return route;
 	}
 
-	public HashSet<String> getMethods() {
+	HashSet<String> getMethods() {
 		return methods;
 	}
 
-	public HashSet<String> getExcludedMethods() {
+	HashSet<String> getExcludedMethods() {
 		return excludedMethods;
 	}
 
@@ -151,7 +146,7 @@ public class RouteBuilder implements RouteOptions, Cloneable {
 		return this;
 	}
 
-	public String getName() {
+	String getName() {
 		String result = name;
 		if (name != null) {
 			result = namePrefix + result;
