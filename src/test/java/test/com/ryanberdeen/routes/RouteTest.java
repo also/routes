@@ -23,7 +23,7 @@ public class RouteTest {
 		simple.prepare();
 	}
 
-	@Test
+	/*@Test
 	public void testApply() {
 		Route route = simple.apply(Collections.singletonMap("id", "1"), null, null);
 		Map<String, String> match = route.match("/instructor/lectures/1", null);
@@ -42,7 +42,7 @@ public class RouteTest {
 
 		match = route.match("/instructor/lectures", null);
 		assertNull("Invalid URL matched", match);
-	}
+	}*/
 
 	@Test
 	public void testMatchUrlIncludeOptional() {
