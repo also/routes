@@ -36,7 +36,7 @@ public class Route {
 	 */
 	public Route(String pattern, Map<String, String> staticParameters, Map<String, String> parameterRegexes) {
 		this();
-		this.urlPattern = PathPatternBuilder.parse(pattern, staticParameters.keySet(), parameterRegexes);
+		this.urlPattern = PathPatternBuilder.parse(pattern, staticParameters.keySet(), parameterRegexes).createPathPattern();
 		this.staticParameterValues = staticParameters;
 	}
 	
@@ -184,16 +184,6 @@ public class Route {
 		}
 
 		return matchCount;
-	}
-
-	public Route apply(Map<String, String> parameters, Set<String> methods, Set<String> excludedMethods) {
-		Route result = new Route();
-
-		result.urlPattern = urlPattern.apply(parameters, staticParameterValues);
-		result.staticParameterValues = new HashMap<String, String>(this.staticParameterValues);
-		result.staticParameterValues.putAll(parameters);
-		result.prepare();
-		return result;
 	}
 
 	public String buildUrl(Map<String, Object> parameters, Map<String, String> contextParameters) {

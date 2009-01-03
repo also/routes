@@ -4,7 +4,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 
 import com.ryanberdeen.routes.Route;
-import com.ryanberdeen.routes.UrlPattern;
 
 public class RouteBuilder implements RouteOptions, Cloneable {
 	private static final String NAME = "name";
@@ -67,7 +66,7 @@ public class RouteBuilder implements RouteOptions, Cloneable {
 		return patternPrefix + pattern;
 	}
 
-	UrlPattern createUrlPattern() {
+	PathPatternBuilder createPathPatternBuilder() {
 		return PathPatternBuilder.parse(getPattern(), parameterValues.keySet(), parameterRegexes);
 	}
 

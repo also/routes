@@ -5,8 +5,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.ryanberdeen.routes.UrlPattern;
-
 public class ResourceTemplate implements RouteSetBuilderTemplate {
 	public static final String COLLECTION_PATTERN_OPTION = "collectionPattern";
 	public static final String MEMBER_PATTERN_OPTION = "memberPattern";
@@ -69,10 +67,10 @@ public class ResourceTemplate implements RouteSetBuilderTemplate {
 			routeSetBuilder.setDefaultStaticParameterValue(getActionParamterName(), INDEX_ACTION);
 
 			Map<String, String> appliedParameters;
-			UrlPattern urlPattern = routeSetBuilder.createUrlPattern().append(pattern);
+			PathPatternBuilder pathPatternBuilder = routeSetBuilder.createPathPatternBuilder().append(pattern);
 			for (String action : collectionActions) {
 				appliedParameters = Collections.singletonMap(getActionParamterName(), action);
-				routeSetBuilder.apply(urlPattern, appliedParameters);
+				routeSetBuilder.apply(pathPatternBuilder, appliedParameters);
 			}
 		}
 	}
@@ -89,10 +87,10 @@ public class ResourceTemplate implements RouteSetBuilderTemplate {
 			routeSetBuilder.setDefaultStaticParameterValue(getActionParamterName(), SHOW_ACTION);
 
 			Map<String, String> appliedParameters;
-			UrlPattern urlPattern = routeSetBuilder.createUrlPattern().append(pattern);
+			PathPatternBuilder pathPatternBuilder = routeSetBuilder.createPathPatternBuilder().append(pattern);
 			for (String action : memberActions) {
 				appliedParameters = Collections.singletonMap(getActionParamterName(), action);
-				routeSetBuilder.apply(urlPattern, appliedParameters);
+				routeSetBuilder.apply(pathPatternBuilder, appliedParameters);
 			}
 		}
 	}

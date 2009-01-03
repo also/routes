@@ -7,7 +7,6 @@ import java.util.Map;
 
 import com.ryanberdeen.routes.Route;
 import com.ryanberdeen.routes.RouteSet;
-import com.ryanberdeen.routes.UrlPattern;
 
 public class RouteSetBuilder implements RouteListBuilder, RouteOptions {
 	private HashMap<String, RouteSetBuilderTemplate> templates = new HashMap<String, RouteSetBuilderTemplate>();
@@ -43,13 +42,13 @@ public class RouteSetBuilder implements RouteListBuilder, RouteOptions {
 	}
 
 	// TODO should return RouteBuilder
-	public Route apply(UrlPattern pattern, Map<String, String> applyParameters) {
+	public Route apply(PathPatternBuilder pattern, Map<String, String> applyParameters) {
 		HashMap<String, String> routeParameters = (HashMap<String, String>) routeDefinition.parameterValues.clone();
 		routeParameters.putAll(applyParameters);
 
-		UrlPattern appliedPattern = pattern.apply(applyParameters, routeDefinition.parameterValues);
+		PathPatternBuilder appliedPattern = pattern.apply(applyParameters, routeDefinition.parameterValues);
 		Route route = new Route();
-		route.setUrlPattern(appliedPattern);
+		route.setUrlPattern(appliedPattern.createPathPattern());
 		route.setStaticParameters(routeParameters);
 		route.setDefaultStaticParameters(routeDefinition.defaultStaticParameterValues);
 		route.setName(routeDefinition.getName());
@@ -66,9 +65,7 @@ public class RouteSetBuilder implements RouteListBuilder, RouteOptions {
 		buildRouteList(routes);
 		RouteSet routeSet = new RouteSet();
 		routeSet.setRoutes(routes);
-		for (Route route : routes) {
-			System.out.println(route.getUrlPattern().getRegex());
-		}
+
 		return routeSet;
 	}
 
@@ -114,8 +111,8 @@ public class RouteSetBuilder implements RouteListBuilder, RouteOptions {
 		return routeDefinition.setParameterRegex(name, regex);
 	}
 
-	public UrlPattern createUrlPattern() {
-		return routeDefinition.createUrlPattern();
+	public PathPatternBuilder createPathPatternBuilder() {
+		return routeDefinition.createPathPatternBuilder();
 	}
 }
 
