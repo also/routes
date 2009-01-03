@@ -65,12 +65,11 @@ public class ResourceTemplate implements RouteSetBuilderTemplate {
 				routeSetBuilder.setOption(COLLECTION_PATTERN_OPTION, pattern);
 			}
 
-			RouteBuilder routeBuilder = routeSetBuilder.getRouteDefinition();
 			routeSetBuilder.setParameterValue(getActionParamterName(), INDEX_ACTION);
 			routeSetBuilder.setDefaultStaticParameterValue(getActionParamterName(), INDEX_ACTION);
 
 			Map<String, String> appliedParameters;
-			UrlPattern urlPattern = routeBuilder.createUrlPattern().append(pattern);
+			UrlPattern urlPattern = routeSetBuilder.createUrlPattern().append(pattern);
 			for (String action : collectionActions) {
 				appliedParameters = Collections.singletonMap(getActionParamterName(), action);
 				routeSetBuilder.apply(urlPattern, appliedParameters);
@@ -86,12 +85,11 @@ public class ResourceTemplate implements RouteSetBuilderTemplate {
 				routeSetBuilder.setOption(MEMBER_PATTERN_OPTION, pattern);
 			}
 
-			RouteBuilder routeBuilder = routeSetBuilder.getRouteDefinition();
 			routeSetBuilder.setParameterValue(getActionParamterName(), SHOW_ACTION);
 			routeSetBuilder.setDefaultStaticParameterValue(getActionParamterName(), SHOW_ACTION);
 
 			Map<String, String> appliedParameters;
-			UrlPattern urlPattern = routeBuilder.createUrlPattern().append(pattern);
+			UrlPattern urlPattern = routeSetBuilder.createUrlPattern().append(pattern);
 			for (String action : memberActions) {
 				appliedParameters = Collections.singletonMap(getActionParamterName(), action);
 				routeSetBuilder.apply(urlPattern, appliedParameters);

@@ -72,11 +72,6 @@ public class RouteSetBuilder implements RouteListBuilder, RouteOptions {
 		return route;
 	}
 
-	@Deprecated
-	public RouteBuilder getRouteDefinition() {
-		return routeDefinition;
-	}
-
 	public RouteSet createRouteSet() {
 		ArrayList<Route> routes = new ArrayList<Route>();
 		buildRouteList(routes);
@@ -128,6 +123,10 @@ public class RouteSetBuilder implements RouteListBuilder, RouteOptions {
 
 	public RouteBuilder setParameterRegex(String name, String regex) {
 		return routeDefinition.setParameterRegex(name, regex);
+	}
+
+	public UrlPattern createUrlPattern() {
+		return routeDefinition.createUrlPattern();
 	}
 }
 
