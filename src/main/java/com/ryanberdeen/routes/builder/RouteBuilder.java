@@ -32,32 +32,6 @@ public class RouteBuilder implements RouteOptions, Cloneable {
 	private HashSet<String> excludedMethods;
 
 	public RouteBuilder() {
-		initDefault();
-	}
-
-	RouteBuilder(RouteBuilder that) {
-		if (that != null) {
-			parameterValues = new HashMap<String, String>(that.parameterValues);
-			defaultStaticParameterValues = new HashMap<String, String>(that.defaultStaticParameterValues);
-			parameterRegexes = new HashMap<String, String>(that.parameterRegexes);
-			options = new HashMap<String, String>(that.options);
-
-			name = that.name;
-			namePrefix = that.namePrefix;
-
-			pattern = that.pattern;
-			patternPrefix = that.patternPrefix;
-
-			methods = new HashSet<String>(that.methods);
-			excludedMethods = new HashSet<String>(that.excludedMethods);
-
-		}
-		else {
-			initDefault();
-		}
-	}
-
-	private void initDefault() {
 		parameterValues = new HashMap<String, String>();
 		defaultStaticParameterValues = new HashMap<String, String>();
 		parameterRegexes = new HashMap<String, String>();
@@ -73,12 +47,28 @@ public class RouteBuilder implements RouteOptions, Cloneable {
 		excludedMethods = new HashSet<String>();
 	}
 
+	RouteBuilder(RouteBuilder that) {
+		parameterValues = new HashMap<String, String>(that.parameterValues);
+		defaultStaticParameterValues = new HashMap<String, String>(that.defaultStaticParameterValues);
+		parameterRegexes = new HashMap<String, String>(that.parameterRegexes);
+		options = new HashMap<String, String>(that.options);
+
+		name = that.name;
+		namePrefix = that.namePrefix;
+
+		pattern = that.pattern;
+		patternPrefix = that.patternPrefix;
+
+		methods = new HashSet<String>(that.methods);
+		excludedMethods = new HashSet<String>(that.excludedMethods);
+	}
+
 	private String getPattern() {
 		return patternPrefix + pattern;
 	}
 
 	UrlPattern createUrlPattern() {
-		return UrlPattern.parse(getPattern(), parameterValues.keySet(), parameterRegexes);
+		return PathPatternBuilder.parse(getPattern(), parameterValues.keySet(), parameterRegexes);
 	}
 
 	Route createRoute() {

@@ -6,6 +6,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
+import com.ryanberdeen.routes.builder.PathPatternBuilder;
+
 public class Route {
 	public static final Map<String, String> NO_PARAMETER_VALUES = Collections.emptyMap();
 	
@@ -34,7 +36,7 @@ public class Route {
 	 */
 	public Route(String pattern, Map<String, String> staticParameters, Map<String, String> parameterRegexes) {
 		this();
-		this.urlPattern = UrlPattern.parse(pattern, staticParameters.keySet(), parameterRegexes);
+		this.urlPattern = PathPatternBuilder.parse(pattern, staticParameters.keySet(), parameterRegexes);
 		this.staticParameterValues = staticParameters;
 	}
 	
