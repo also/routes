@@ -5,10 +5,10 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import com.ryanberdeen.routes.ParameterSegment;
 import com.ryanberdeen.routes.PathPattern;
-import com.ryanberdeen.routes.PathPattern.ParameterSegment;
-import com.ryanberdeen.routes.PathPattern.PathSegment;
-import com.ryanberdeen.routes.PathPattern.StaticSegment;
+import com.ryanberdeen.routes.PathSegment;
+import com.ryanberdeen.routes.StaticSegment;
 
 public class PathPatternBuilder implements Cloneable {
 	private static final char PARAMETER_WITHOUT_SLASHES_PREFIX = ':';
