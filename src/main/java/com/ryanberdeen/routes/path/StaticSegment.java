@@ -1,4 +1,4 @@
-package com.ryanberdeen.routes;
+package com.ryanberdeen.routes.path;
 
 import java.util.Map;
 

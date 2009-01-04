@@ -1,4 +1,4 @@
-package com.ryanberdeen.routes;
+package com.ryanberdeen.routes.path;
 
 public class PathBuilder {
 	private int requiredLength = 0;

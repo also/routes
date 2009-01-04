@@ -1,4 +1,4 @@
-package com.ryanberdeen.routes;
+package com.ryanberdeen.routes.path;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -13,7 +13,7 @@ import org.junit.Test;
 
 import com.ryanberdeen.routes.builder.PathPatternBuilder;
 
-public class UrlPatternTest {
+public class PathPatternTest {
 	private PathPatternBuilder noParameters;
 	private PathPatternBuilder simplePatternAfter;
 	private PathPatternBuilder simplePatternBefore;

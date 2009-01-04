@@ -7,6 +7,7 @@ import java.util.Map;
 import java.util.Set;
 
 import com.ryanberdeen.routes.builder.PathPatternBuilder;
+import com.ryanberdeen.routes.path.PathPattern;
 
 public class Route {
 	public static final Map<String, String> NO_PARAMETER_VALUES = Collections.emptyMap();
