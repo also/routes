@@ -30,9 +30,9 @@ public class RouteSetBuilder implements RouteListBuilder, RouteOptions {
 	}
 
 	public RouteBuilder match() {
-		RouteBuilder routeDefinition = new RouteBuilder(this.routeDefinition);
-		routeListBuilders.add(new SingleRouteDefinition(routeDefinition));
-		return routeDefinition;
+		RouteBuilder result = new RouteBuilder(routeDefinition);
+		routeListBuilders.add(new SingleRouteDefinition(result));
+		return result;
 	}
 
 	public RouteBuilder match(String pattern) {
@@ -47,11 +47,7 @@ public class RouteSetBuilder implements RouteListBuilder, RouteOptions {
 	}
 
 	public RouteBuilder apply(Map<String, String> applyParameters) {
-		RouteBuilder result = routeDefinition.apply(applyParameters);
-
-		routeListBuilders.add(new SingleRouteDefinition(result));
-
-		return result;
+		return match().apply(applyParameters);
 	}
 
 	public RouteSet createRouteSet() {

@@ -164,9 +164,8 @@ public class RouteBuilder implements RouteOptions, Cloneable {
 	}
 
 	public RouteBuilder apply(Map<String, String> applyParameters) {
-		RouteBuilder result = new RouteBuilder(this);
-		result.parameterValues.putAll(applyParameters);
-		result.pathPatternBuilder.apply(applyParameters, parameterValues);
-		return result;
+		parameterValues.putAll(applyParameters);
+		pathPatternBuilder.apply(applyParameters, parameterValues);
+		return this;
 	}
 }
