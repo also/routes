@@ -1,6 +1,8 @@
 package com.ryanberdeen.routes;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 
 import java.util.Collections;
 import java.util.Map;
@@ -9,7 +11,6 @@ import java.util.Set;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.ryanberdeen.routes.UrlPattern;
 import com.ryanberdeen.routes.builder.PathPatternBuilder;
 
 public class UrlPatternTest {
@@ -23,25 +24,25 @@ public class UrlPatternTest {
 
 	@Before
 	public void setUp() {
-		noParameters = PathPatternBuilder.parse("noParameters", NO_PARAMETER_NAMES, NO_PARAMETER_VALUES);
-		simplePatternAfter = PathPatternBuilder.parse("before/:parameter", NO_PARAMETER_NAMES, NO_PARAMETER_VALUES);
-		simplePatternBefore = PathPatternBuilder.parse(":parameter/after", NO_PARAMETER_NAMES, NO_PARAMETER_VALUES);
-		simplePatternDefault = PathPatternBuilder.parse("before/:parameter/", Collections.singleton("parameter"), NO_PARAMETER_VALUES);
+		noParameters = PathPatternBuilder.parse("noParameters");
+		simplePatternAfter = PathPatternBuilder.parse("before/:parameter");
+		simplePatternBefore = PathPatternBuilder.parse(":parameter/after");
+		simplePatternDefault = PathPatternBuilder.parse("before/:parameter/");
 	}
 
 	@Test
 	public void testAppendStatic() {
-		UrlPattern pattern;
+		PathPattern pattern;
 		Map<String, String> match;
 
-		pattern = noParameters.appendStatic("/appended").createPathPattern();
+		pattern = noParameters.appendStatic("/appended").createPathPattern(NO_PARAMETER_NAMES, NO_PARAMETER_VALUES);
 		match = pattern.match("noParameters/appended");
 		// the pattern should have matched
 		assertNotNull(match);
 		// with no parameters
 		assertEquals(match.size(), 0);
 
-		pattern = simplePatternAfter.appendStatic("/after").createPathPattern();
+		pattern = simplePatternAfter.appendStatic("/after").createPathPattern(NO_PARAMETER_NAMES, NO_PARAMETER_VALUES);
 		match = pattern.match("before/value/after");
 		assertNotNull(match);
 		assertEquals(match, Collections.singletonMap("parameter", "value"));
@@ -49,30 +50,30 @@ public class UrlPatternTest {
 
 	@Test
 	public void testAppendParameter() {
-		UrlPattern pattern;
+		PathPattern pattern;
 		Map<String, String> match;
 
-		pattern = noParameters.appendParameter("parameter").createPathPattern();
+		pattern = noParameters.appendParameter("parameter").createPathPattern(NO_PARAMETER_NAMES, NO_PARAMETER_VALUES);
 		match = pattern.match("noParametersvalue");
 		assertNotNull(match);
 		assertEquals(match, Collections.singletonMap("parameter", "value"));
 
-		pattern = simplePatternAfter.appendStatic("/").appendParameter("parameter2").createPathPattern();
+		pattern = simplePatternAfter.appendStatic("/").appendParameter("parameter2").createPathPattern(NO_PARAMETER_NAMES, NO_PARAMETER_VALUES);
 		match = pattern.match("before/value/value2");
 		assertNotNull(match);
 	}
 
 	@Test
 	public void testApply() {
-		UrlPattern pattern;
+		PathPattern pattern;
 		Map<String, String> match;
 
-		pattern = simplePatternAfter.apply(Collections.singletonMap("parameter", "value"), NO_PARAMETER_VALUES).createPathPattern();
+		pattern = simplePatternAfter.apply(Collections.singletonMap("parameter", "value"), NO_PARAMETER_VALUES).createPathPattern(NO_PARAMETER_NAMES, NO_PARAMETER_VALUES);
 		match = pattern.match("before/value");
 		assertNotNull(match);
 		assertEquals(0, match.size());
 
-		pattern = simplePatternBefore.apply(Collections.singletonMap("parameter", "value"), NO_PARAMETER_VALUES).createPathPattern();
+		pattern = simplePatternBefore.apply(Collections.singletonMap("parameter", "value"), NO_PARAMETER_VALUES).createPathPattern(NO_PARAMETER_NAMES, NO_PARAMETER_VALUES);
 		match = pattern.match("value/after");
 		assertNotNull(match);
 		assertEquals(0, match.size());
@@ -80,7 +81,7 @@ public class UrlPatternTest {
 		assertNull(match);
 
 		Map<String, String> parameters = Collections.singletonMap("parameter", "value(");
-		pattern = simplePatternDefault.apply(parameters, Collections.singletonMap("parameter", "value(")).createPathPattern();
+		pattern = simplePatternDefault.apply(parameters, Collections.singletonMap("parameter", "value(")).createPathPattern(Collections.singleton("parameter"), NO_PARAMETER_VALUES);
 		match = pattern.match("before/value(");
 		assertNotNull(match);
 		assertEquals(0, match.size());

@@ -37,27 +37,21 @@ public class RouteSetBuilder implements RouteListBuilder, RouteOptions {
 
 	public RouteBuilder match(String pattern) {
 		RouteBuilder routeDefinition = match();
-		routeDefinition.setPattern(pattern);
+		routeDefinition.append(pattern);
 		return routeDefinition;
 	}
 
-	// TODO should return RouteBuilder
-	public Route apply(PathPatternBuilder pattern, Map<String, String> applyParameters) {
-		HashMap<String, String> routeParameters = (HashMap<String, String>) routeDefinition.parameterValues.clone();
-		routeParameters.putAll(applyParameters);
+	public RouteSetBuilder append(String pattern) {
+		routeDefinition.append(pattern);
+		return this;
+	}
 
-		PathPatternBuilder appliedPattern = pattern.apply(applyParameters, routeDefinition.parameterValues);
-		Route route = new Route();
-		route.setUrlPattern(appliedPattern.createPathPattern());
-		route.setStaticParameters(routeParameters);
-		route.setDefaultStaticParameters(routeDefinition.defaultStaticParameterValues);
-		route.setName(routeDefinition.getName());
-		route.setMethods(routeDefinition.getMethods());
-		route.setExcludedMethods(routeDefinition.getExcludedMethods());
+	public RouteBuilder apply(Map<String, String> applyParameters) {
+		RouteBuilder result = routeDefinition.apply(applyParameters);
 
-		routeListBuilders.add(new SingleRoute(route));
+		routeListBuilders.add(new SingleRouteDefinition(result));
 
-		return route;
+		return result;
 	}
 
 	public RouteSet createRouteSet() {
@@ -109,10 +103,6 @@ public class RouteSetBuilder implements RouteListBuilder, RouteOptions {
 
 	public RouteBuilder setParameterRegex(String name, String regex) {
 		return routeDefinition.setParameterRegex(name, regex);
-	}
-
-	public PathPatternBuilder createPathPatternBuilder() {
-		return routeDefinition.createPathPatternBuilder();
 	}
 }
 

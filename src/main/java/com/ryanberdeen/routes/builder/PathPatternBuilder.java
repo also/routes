@@ -2,66 +2,35 @@ package com.ryanberdeen.routes.builder;
 
 import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
 import com.ryanberdeen.routes.PathPattern;
 import com.ryanberdeen.routes.PathPattern.ParameterSegment;
-import com.ryanberdeen.routes.PathPattern.StaticSegment;
 import com.ryanberdeen.routes.PathPattern.PathSegment;
+import com.ryanberdeen.routes.PathPattern.StaticSegment;
 
 public class PathPatternBuilder implements Cloneable {
 	private static final char PARAMETER_WITHOUT_SLASHES_PREFIX = ':';
 	private static final char PARAMETER_WITH_SLASHES_PREFIX = '*';
 
-	private Set<String> optionalParameterNames;
-	private Map<String, String> parameterRegexes;
-
 	private HashSet<String> parameterNames;
-	private ArrayList<PathSegment> pathSegments;
+	private ArrayList<PathSegmentBuilder> pathSegmentBuilders;
 
 	public PathPatternBuilder() {
-		pathSegments = new ArrayList<PathSegment>();
+		pathSegmentBuilders = new ArrayList<PathSegmentBuilder>();
 		parameterNames = new HashSet<String>();
 	}
 
-	public PathPatternBuilder(Set<String> optionalParameterNames, Map<String, String> parameterRegexes) {
-		this();
-		this.optionalParameterNames = optionalParameterNames;
-		this.parameterRegexes = parameterRegexes;
-	}
-
-	public void addParameterName(Object segment, Object parameterName, boolean allowSlashes) {
-		boolean required = true;
-		String paramaterNameString = null;
-		String regex = null;
-
-		if (parameterName != null) {
-			paramaterNameString = parameterName.toString();
-
-			parameterNames.add(paramaterNameString);
-
-			if (optionalParameterNames != null && optionalParameterNames.contains(paramaterNameString)) {
-				required = false;
-			}
-
-			if (parameterRegexes != null) {
-				regex = parameterRegexes.get(paramaterNameString);
-			}
-		}
-
-		pathSegments.add(new StaticSegment(segment.toString()));
-
-		if (paramaterNameString != null && !"".equals(paramaterNameString)) {
-			pathSegments.add(new ParameterSegment(required, allowSlashes, paramaterNameString, regex));
-		}
+	public PathPatternBuilder(PathPatternBuilder that) {
+		pathSegmentBuilders = new ArrayList<PathSegmentBuilder>(that.pathSegmentBuilders);
+		parameterNames = new HashSet<String>(that.parameterNames);
 	}
 
 	public PathPatternBuilder apply(Map<String, String> parameters, Map<String, String> staticParameterValues) {
 		PathPatternBuilder result = new PathPatternBuilder();
 
-		for (PathSegment pathSegment : pathSegments) {
+		for (PathSegmentBuilder pathSegment : pathSegmentBuilders) {
 			result.append(pathSegment.apply(parameters, staticParameterValues));
 		}
 
@@ -69,47 +38,18 @@ public class PathPatternBuilder implements Cloneable {
 	}
 
 	/** Returns a new PathPatternBuilder with the pattern appended to it.
-	 *  All parameters in the appended pattern are required.
 	 */
 	public PathPatternBuilder append(String pattern) {
-		return append(pattern, null, null);
-	}
-
-	/** Returns a new PathPatternBuilder with the pattern appended to it.
-	 *  The named parameters in the appended pattern are not required.
-	 */
-	public PathPatternBuilder append(String pattern, Set<String> optionalParameterNames, Map<String, String> parameterRegexes) {
-		return append(PathPatternBuilder.parse(pattern, optionalParameterNames, parameterRegexes).createPathPattern());
-	}
-
-	/** Returns a new PathPatternBuilder with the pattern appended to it.
-	 */
-	public PathPatternBuilder append(PathPattern pathPattern) {
 		PathPatternBuilder result = clone();
-
-		Iterator<PathSegment> iterator = pathPattern.getPathSegments().iterator();
-
-		if (iterator.hasNext()) {
-			PathSegment current = iterator.next();
-
-			result.append(current);
-
-			while (iterator.hasNext()) {
-				current = iterator.next();
-				result.pathSegments.add(current.clone());
-				if (current instanceof ParameterSegment) {
-					result.parameterNames.add(((ParameterSegment) current).getName());
-				}
-			}
-		}
+		PathPatternBuilder.parse(result, pattern);
 		return result;
 	}
 
 	/** Returns a new PathPatternBuilder with the static path segment appended to it.
 	 */
 	public PathPatternBuilder appendStatic(String pathSegment) {
-		PathSegment parameter = new StaticSegment(pathSegment);
-		return appended(parameter);
+		StaticSegmentBuilder segment = new StaticSegmentBuilder(pathSegment, true);
+		return appended(segment);
 	}
 
 	/** Returns a new PathPatternBuilder with the parameter appended to it.
@@ -120,28 +60,27 @@ public class PathPatternBuilder implements Cloneable {
 	}
 
 	/** Returns a new PathPatternBuilder with the parameter appended to it.
-	 *  The parameter is required.
 	 */
 	public PathPatternBuilder appendParameter(String parameterName, boolean allowSlashes) {
-		ParameterSegment parameter = new ParameterSegment(true, allowSlashes, parameterName);
+		ParameterSegmentBuilder parameter = new ParameterSegmentBuilder(parameterName, allowSlashes);
 		return appended(parameter);
 	}
 
-	/** Returns a new PathPatternBuilder with the UrlSegment appended.
+	/** Returns a new PathPatternBuilder with the PathSegmentBuilder appended.
 	 */
-	private PathPatternBuilder appended(PathSegment pathSegment) {
+	private PathPatternBuilder appended(PathSegmentBuilder pathSegment) {
 		PathPatternBuilder result = clone();
 		result.append(pathSegment);
 		return result;
 	}
 
-	/** Appends a UrlSegment.
+	/** Appends a PathSegmentBuilder.
 	 */
-	private void append(PathSegment pathSegment) {
-		pathSegments.add(pathSegment.clone());
-		if (pathSegment instanceof ParameterSegment) {
-			ParameterSegment parameter = (ParameterSegment) pathSegment;
-			parameterNames.add(parameter.getName());
+	private void append(PathSegmentBuilder pathSegment) {
+		pathSegmentBuilders.add(pathSegment.clone());
+		if (pathSegment instanceof ParameterSegmentBuilder) {
+			ParameterSegmentBuilder parameter = (ParameterSegmentBuilder) pathSegment;
+			parameterNames.add(parameter.name);
 		}
 	}
 
@@ -151,9 +90,9 @@ public class PathPatternBuilder implements Cloneable {
 		try {
 			PathPatternBuilder result = (PathPatternBuilder) super.clone();
 
-			result.pathSegments = new ArrayList<PathSegment>(pathSegments.size());
-			for (PathSegment parameter : pathSegments) {
-				result.pathSegments.add(parameter.clone());
+			result.pathSegmentBuilders = new ArrayList<PathSegmentBuilder>(pathSegmentBuilders.size());
+			for (PathSegmentBuilder parameter : pathSegmentBuilders) {
+				result.pathSegmentBuilders.add(parameter.clone());
 			}
 
 			result.parameterNames = (HashSet<String>) parameterNames.clone();
@@ -165,7 +104,29 @@ public class PathPatternBuilder implements Cloneable {
 		}
 	}
 
-	public PathPattern createPathPattern() {
+	public PathPattern createPathPattern(Set<String> optionalParameterNames, Map<String, String> parameterRegexes) {
+		ArrayList<PathSegment> pathSegments = new ArrayList<PathSegment>();
+		for (PathSegmentBuilder pathSegmentBuidler : pathSegmentBuilders) {
+			if (pathSegmentBuidler instanceof ParameterSegmentBuilder) {
+				ParameterSegmentBuilder parameterSegmentBuilder = (ParameterSegmentBuilder) pathSegmentBuidler;
+				boolean required = true;
+				String regex = null;
+
+				String parameterName = parameterSegmentBuilder.name;
+				if (optionalParameterNames != null && optionalParameterNames.contains(parameterName)) {
+					required = false;
+				}
+
+				if (parameterRegexes != null) {
+					regex = parameterRegexes.get(parameterName);
+				}
+				pathSegments.add(parameterSegmentBuilder.createPathSegment(regex, required));
+			}
+			else {
+				StaticSegmentBuilder staticSegmentBuilder = (StaticSegmentBuilder) pathSegmentBuidler;
+				pathSegments.add(staticSegmentBuilder.createPathSegment());
+			}
+		}
 		return new PathPattern(pathSegments, parameterNames);
 	}
 
@@ -178,9 +139,13 @@ public class PathPatternBuilder implements Cloneable {
 	 * @param parameterRegexes the regular expressions to use for the parameter values
 	 * @return a {@link PathPatternBuilder} that will match paths to the pattern
 	 */
-	public static PathPatternBuilder parse(String pattern, Set<String> optionalParameterNames, Map<String, String> parameterRegexes) {
-		PathPatternBuilder builder = new PathPatternBuilder(optionalParameterNames, parameterRegexes);
+	public static PathPatternBuilder parse(String pattern) {
+		PathPatternBuilder builder = new PathPatternBuilder();
+		parse(builder, pattern);
+		return builder;
+	}
 
+	private static void parse(PathPatternBuilder builder, String pattern) {
 		boolean requireNameStart = false;
 		StringBuilder nameBuilder = null;
 		boolean allowSlashes = false;
@@ -234,13 +199,90 @@ public class PathPatternBuilder implements Cloneable {
 		}
 
 		builder.addParameterName(segmentBuilder, nameBuilder, allowSlashes);
-
-		return builder;
 	}
 
 	/** Tests if the character is a valid name character: [A-Za-z0-9_]
 	 */
 	private static boolean isValidNameChar(char c) {
 		return (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') || (c >= '0' && c <= '9') || c == '_';
+	}
+
+	private void addParameterName(Object segment, Object parameterName, boolean allowSlashes) {
+		String parameterNameString = null;
+
+		if (parameterName != null) {
+			parameterNameString = parameterName.toString();
+
+			parameterNames.add(parameterNameString);
+		}
+
+		pathSegmentBuilders.add(new StaticSegmentBuilder(segment.toString(), true));
+
+		if (parameterNameString != null && !"".equals(parameterNameString)) {
+			pathSegmentBuilders.add(new ParameterSegmentBuilder(parameterNameString, allowSlashes));
+		}
+	}
+
+	private interface PathSegmentBuilder extends Cloneable {
+		public PathSegmentBuilder apply(Map<String, String> parameters, Map<String, String> staticParameterValues);
+
+		public PathSegmentBuilder clone();
+	}
+
+	private static class StaticSegmentBuilder implements PathSegmentBuilder {
+		private String value;
+		private boolean required;
+
+		StaticSegmentBuilder(String value, boolean required) {
+			this.value = value;
+			this.required = required;
+		}
+
+		public PathSegmentBuilder apply(Map<String, String> parameters, Map<String, String> staticParameterValues) {
+			return clone();
+		}
+
+		public PathSegment createPathSegment() {
+			return new StaticSegment(value, required);
+		}
+
+		@Override
+		public StaticSegmentBuilder clone() {
+			return new StaticSegmentBuilder(value, required);
+		}
+	}
+
+	private static class ParameterSegmentBuilder implements PathSegmentBuilder {
+		boolean allowSlashes;
+		String name;
+
+		ParameterSegmentBuilder(String name, boolean allowSlashes) {
+			this.name = name;
+			this.allowSlashes = allowSlashes;
+		}
+
+		public PathSegmentBuilder apply(Map<String, String> parameters, Map<String, String> staticParameterValues) {
+			String value = parameters.get(name);
+			if (value != null) {
+				return new StaticSegmentBuilder(value, !value.equals(staticParameterValues.get(name)));
+			}
+			else {
+				return clone();
+			}
+		}
+
+		public PathSegment createPathSegment(String regex, boolean required) {
+			return new ParameterSegment(required, allowSlashes, name, regex);
+		}
+
+		@Override
+		public PathSegmentBuilder clone() {
+			try {
+				return (ParameterSegmentBuilder) super.clone();
+			}
+			catch (CloneNotSupportedException ex) {
+				throw new Error(ex);
+			}
+		}
 	}
 }

@@ -1,8 +1,6 @@
 package com.ryanberdeen.routes;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -22,15 +20,15 @@ public class PathPattern {
 	private Pattern regex;
 
 	/** The parameter names this pattern will provide. */
-	private HashSet<String> parameterNames;
+	private Set<String> parameterNames;
 
 	/** The path segments that make up this pattern.
 	 *  These segments are used to generate the regular expression and generate
 	 *  paths from parameters.
 	 */
-	private ArrayList<PathSegment> pathSegments;
+	private List<PathSegment> pathSegments;
 
-	public PathPattern(ArrayList<PathSegment> pathSegments, HashSet<String> parameterNames) {
+	public PathPattern(List<PathSegment> pathSegments, Set<String> parameterNames) {
 		this.pathSegments = pathSegments;
 		this.parameterNames = parameterNames;
 	}
@@ -140,7 +138,7 @@ public class PathPattern {
 		return templateBuilder.toString();
 	}
 
-	public static interface PathSegment extends Cloneable {
+	public static interface PathSegment {
 		/** Appends the regex that represents this segment to the builder.
 		 */
 		public void appendRegex(StringBuilder regexBuilder);
@@ -152,19 +150,11 @@ public class PathPattern {
 		/** Appends the template that represents this segment to the builder.
 		 */
 		public void appendTemplate(StringBuilder templateBuilder);
-
-		public PathSegment apply(Map<String, String> parameters, Map<String, String> staticParameterValues);
-
-		public PathSegment clone();
 	}
 
 	public static class StaticSegment implements PathSegment, Cloneable {
 		private String value;
 		private boolean required;
-
-		public StaticSegment(String value) {
-			this(value, true);
-		}
 
 		public StaticSegment(String value, boolean required) {
 			this.value = value;
@@ -188,14 +178,6 @@ public class PathPattern {
 		public void appendTemplate(StringBuilder templateBuilder) {
 			templateBuilder.append(value);
 		}
-
-		public StaticSegment apply(Map<String, String> parameters, Map<String, String> staticParameterValues) {
-			return clone();
-		}
-
-		public StaticSegment clone() {
-			return new StaticSegment(value, required);
-		}
 	}
 
 	public static class ParameterSegment implements PathSegment, Cloneable {
@@ -217,16 +199,6 @@ public class PathPattern {
 
 		public String getName() {
 			return name;
-		}
-
-		@Override
-		public ParameterSegment clone() {
-			try {
-				return (ParameterSegment) super.clone();
-			}
-			catch (CloneNotSupportedException ex) {
-				throw new Error(ex);
-			}
 		}
 
 		public void appendRegex(StringBuilder regexBuilder) {
@@ -259,16 +231,6 @@ public class PathPattern {
 				throw new RuntimeException("No value for [" + name + "]");
 			}
 			pathBuilder.append(result, required || !result.equals(staticParameterValues.get(name)));
-		}
-
-		public PathSegment apply(Map<String, String> parameters, Map<String, String> staticParameterValues) {
-			String value = parameters.get(name);
-			if (value != null) {
-				return new StaticSegment(value, !value.equals(staticParameterValues.get(name)));
-			}
-			else {
-				return clone();
-			}
 		}
 
 		public void appendTemplate(StringBuilder templateBuilder) {

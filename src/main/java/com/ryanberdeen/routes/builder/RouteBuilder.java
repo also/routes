@@ -2,6 +2,7 @@ package com.ryanberdeen.routes.builder;
 
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 
 import com.ryanberdeen.routes.Route;
 
@@ -9,14 +10,12 @@ public class RouteBuilder implements RouteOptions, Cloneable {
 	private static final String NAME = "name";
 	private static final String NAME_PREFIX = "namePrefix";
 	private static final String PATTERN = "pattern";
-	private static final String PATTERN_PREFIX = "patternPrefix";
 	private static final String METHODS = "methods";
 	private static final String EXCLUDED_METHODS = "excludedMethods";
 
 	@Deprecated
 	public HashMap<String, String> parameterValues;
-	@Deprecated
-	HashMap<String, String> defaultStaticParameterValues;
+	private HashMap<String, String> defaultStaticParameterValues;
 	private HashMap<String, String> parameterRegexes;
 
 	private HashMap<String, String> options;
@@ -24,8 +23,7 @@ public class RouteBuilder implements RouteOptions, Cloneable {
 	private String name;
 	private String namePrefix;
 
-	private String pattern;
-	private String patternPrefix;
+	private PathPatternBuilder pathPatternBuilder;
 
 	private HashSet<String> methods;
 	private HashSet<String> excludedMethods;
@@ -39,8 +37,7 @@ public class RouteBuilder implements RouteOptions, Cloneable {
 		name = null;
 		namePrefix = "";
 
-		pattern = null;
-		patternPrefix = "";
+		pathPatternBuilder = new PathPatternBuilder();
 
 		methods = new HashSet<String>();
 		excludedMethods = new HashSet<String>();
@@ -55,28 +52,28 @@ public class RouteBuilder implements RouteOptions, Cloneable {
 		name = that.name;
 		namePrefix = that.namePrefix;
 
-		pattern = that.pattern;
-		patternPrefix = that.patternPrefix;
+		pathPatternBuilder = new PathPatternBuilder(that.pathPatternBuilder);
 
 		methods = new HashSet<String>(that.methods);
 		excludedMethods = new HashSet<String>(that.excludedMethods);
 	}
 
-	private String getPattern() {
-		return patternPrefix + pattern;
-	}
-
-	PathPatternBuilder createPathPatternBuilder() {
-		return PathPatternBuilder.parse(getPattern(), parameterValues.keySet(), parameterRegexes);
-	}
-
 	Route createRoute() {
-		Route route = new Route(getPattern(), parameterValues, parameterRegexes);
+		Route route = new Route(pathPatternBuilder, parameterValues, parameterRegexes);
 		route.setDefaultStaticParameters(defaultStaticParameterValues);
 		route.setName(getName());
 		route.setMethods(getMethods());
 		route.setExcludedMethods(getExcludedMethods());
 		return route;
+	}
+
+	public PathPatternBuilder getPathPatternBuilder() {
+		return pathPatternBuilder;
+	}
+
+	public RouteBuilder setPathPatternBuilder(PathPatternBuilder pathPatternBuilder) {
+		this.pathPatternBuilder = pathPatternBuilder;
+		return this;
 	}
 
 	HashSet<String> getMethods() {
@@ -95,10 +92,7 @@ public class RouteBuilder implements RouteOptions, Cloneable {
 			namePrefix = optionName;
 		}
 		else if (PATTERN.equals(optionName)) {
-			pattern = value;
-		}
-		else if (PATTERN_PREFIX.equals(optionName)) {
-			patternPrefix = value;
+			append(value);
 		}
 		else if (METHODS.equals(optionName)) {
 			methods = parseMethodString(value);
@@ -144,8 +138,8 @@ public class RouteBuilder implements RouteOptions, Cloneable {
 		return result;
 	}
 
-	public RouteBuilder setPattern(String pattern) {
-		this.pattern = pattern;
+	public RouteBuilder append(String pattern) {
+		pathPatternBuilder = pathPatternBuilder.append(pattern);
 		return this;
 	}
 
@@ -159,8 +153,20 @@ public class RouteBuilder implements RouteOptions, Cloneable {
 		return this;
 	}
 
+	public RouteBuilder setDefaultStaticParameterValues(HashMap<String, String> defaultStaticParameterValues) {
+		this.defaultStaticParameterValues = defaultStaticParameterValues;
+		return this;
+	}
+
 	public RouteBuilder setParameterRegex(String name, String regex) {
 		parameterRegexes.put(name, regex);
 		return this;
+	}
+
+	public RouteBuilder apply(Map<String, String> applyParameters) {
+		RouteBuilder result = new RouteBuilder(this);
+		result.parameterValues.putAll(applyParameters);
+		result.pathPatternBuilder.apply(applyParameters, parameterValues);
+		return result;
 	}
 }

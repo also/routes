@@ -67,10 +67,10 @@ public class ResourceTemplate implements RouteSetBuilderTemplate {
 			routeSetBuilder.setDefaultStaticParameterValue(getActionParamterName(), INDEX_ACTION);
 
 			Map<String, String> appliedParameters;
-			PathPatternBuilder pathPatternBuilder = routeSetBuilder.createPathPatternBuilder().append(pattern);
+			routeSetBuilder.append(pattern);
 			for (String action : collectionActions) {
 				appliedParameters = Collections.singletonMap(getActionParamterName(), action);
-				routeSetBuilder.apply(pathPatternBuilder, appliedParameters);
+				routeSetBuilder.apply(appliedParameters);
 			}
 		}
 	}
@@ -87,10 +87,10 @@ public class ResourceTemplate implements RouteSetBuilderTemplate {
 			routeSetBuilder.setDefaultStaticParameterValue(getActionParamterName(), SHOW_ACTION);
 
 			Map<String, String> appliedParameters;
-			PathPatternBuilder pathPatternBuilder = routeSetBuilder.createPathPatternBuilder().append(pattern);
+			routeSetBuilder.append(pattern);
 			for (String action : memberActions) {
 				appliedParameters = Collections.singletonMap(getActionParamterName(), action);
-				routeSetBuilder.apply(pathPatternBuilder, appliedParameters);
+				routeSetBuilder.apply(appliedParameters);
 			}
 		}
 	}
