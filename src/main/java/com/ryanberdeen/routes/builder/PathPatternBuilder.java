@@ -198,18 +198,17 @@ public class PathPatternBuilder implements Cloneable {
 	}
 
 	private void addParameterName(Object segment, Object parameterName, boolean allowSlashes) {
-		String parameterNameString = null;
-
-		if (parameterName != null) {
-			parameterNameString = parameterName.toString();
-
-			parameterNames.add(parameterNameString);
+		String segmentString = segment.toString();
+		if (segmentString.length() > 0) {
+			pathSegmentBuilders.add(new StaticSegmentBuilder(segment.toString(), true));
 		}
 
-		pathSegmentBuilders.add(new StaticSegmentBuilder(segment.toString(), true));
-
-		if (parameterNameString != null && !"".equals(parameterNameString)) {
-			pathSegmentBuilders.add(new ParameterSegmentBuilder(parameterNameString, allowSlashes));
+		if (parameterName != null) {
+			String parameterNameString = parameterName.toString();
+			if (parameterNameString.length() > 0) {
+				parameterNames.add(parameterNameString);
+				pathSegmentBuilders.add(new ParameterSegmentBuilder(parameterNameString, allowSlashes));
+			}
 		}
 	}
 
