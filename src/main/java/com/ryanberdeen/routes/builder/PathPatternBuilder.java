@@ -6,10 +6,10 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
-import com.ryanberdeen.routes.UrlPattern;
-import com.ryanberdeen.routes.UrlPattern.ParameterSegment;
-import com.ryanberdeen.routes.UrlPattern.StaticSegment;
-import com.ryanberdeen.routes.UrlPattern.UrlSegment;
+import com.ryanberdeen.routes.PathPattern;
+import com.ryanberdeen.routes.PathPattern.ParameterSegment;
+import com.ryanberdeen.routes.PathPattern.StaticSegment;
+import com.ryanberdeen.routes.PathPattern.PathSegment;
 
 public class PathPatternBuilder implements Cloneable {
 	private static final char PARAMETER_WITHOUT_SLASHES_PREFIX = ':';
@@ -19,10 +19,10 @@ public class PathPatternBuilder implements Cloneable {
 	private Map<String, String> parameterRegexes;
 
 	private HashSet<String> parameterNames;
-	private ArrayList<UrlSegment> pathSegments;
+	private ArrayList<PathSegment> pathSegments;
 
 	public PathPatternBuilder() {
-		pathSegments = new ArrayList<UrlSegment>();
+		pathSegments = new ArrayList<PathSegment>();
 		parameterNames = new HashSet<String>();
 	}
 
@@ -61,7 +61,7 @@ public class PathPatternBuilder implements Cloneable {
 	public PathPatternBuilder apply(Map<String, String> parameters, Map<String, String> staticParameterValues) {
 		PathPatternBuilder result = new PathPatternBuilder();
 
-		for (UrlSegment pathSegment : pathSegments) {
+		for (PathSegment pathSegment : pathSegments) {
 			result.append(pathSegment.apply(parameters, staticParameterValues));
 		}
 
@@ -84,13 +84,13 @@ public class PathPatternBuilder implements Cloneable {
 
 	/** Returns a new PathPatternBuilder with the pattern appended to it.
 	 */
-	public PathPatternBuilder append(UrlPattern pathPattern) {
+	public PathPatternBuilder append(PathPattern pathPattern) {
 		PathPatternBuilder result = clone();
 
-		Iterator<UrlSegment> iterator = pathPattern.getPathSegments().iterator();
+		Iterator<PathSegment> iterator = pathPattern.getPathSegments().iterator();
 
 		if (iterator.hasNext()) {
-			UrlSegment current = iterator.next();
+			PathSegment current = iterator.next();
 
 			result.append(current);
 
@@ -108,7 +108,7 @@ public class PathPatternBuilder implements Cloneable {
 	/** Returns a new PathPatternBuilder with the static path segment appended to it.
 	 */
 	public PathPatternBuilder appendStatic(String pathSegment) {
-		UrlSegment parameter = new StaticSegment(pathSegment);
+		PathSegment parameter = new StaticSegment(pathSegment);
 		return appended(parameter);
 	}
 
@@ -129,7 +129,7 @@ public class PathPatternBuilder implements Cloneable {
 
 	/** Returns a new PathPatternBuilder with the UrlSegment appended.
 	 */
-	private PathPatternBuilder appended(UrlSegment pathSegment) {
+	private PathPatternBuilder appended(PathSegment pathSegment) {
 		PathPatternBuilder result = clone();
 		result.append(pathSegment);
 		return result;
@@ -137,7 +137,7 @@ public class PathPatternBuilder implements Cloneable {
 
 	/** Appends a UrlSegment.
 	 */
-	private void append(UrlSegment pathSegment) {
+	private void append(PathSegment pathSegment) {
 		pathSegments.add(pathSegment.clone());
 		if (pathSegment instanceof ParameterSegment) {
 			ParameterSegment parameter = (ParameterSegment) pathSegment;
@@ -151,8 +151,8 @@ public class PathPatternBuilder implements Cloneable {
 		try {
 			PathPatternBuilder result = (PathPatternBuilder) super.clone();
 
-			result.pathSegments = new ArrayList<UrlSegment>(pathSegments.size());
-			for (UrlSegment parameter : pathSegments) {
+			result.pathSegments = new ArrayList<PathSegment>(pathSegments.size());
+			for (PathSegment parameter : pathSegments) {
 				result.pathSegments.add(parameter.clone());
 			}
 
@@ -165,8 +165,8 @@ public class PathPatternBuilder implements Cloneable {
 		}
 	}
 
-	public UrlPattern createPathPattern() {
-		return new UrlPattern(pathSegments, parameterNames);
+	public PathPattern createPathPattern() {
+		return new PathPattern(pathSegments, parameterNames);
 	}
 
 	/** Parses a String into a path pattern.

@@ -23,7 +23,7 @@ public class Route {
 	private HashMap<String, String> optionalStaticParameterValues;
 	private Set<String> methods;
 	private Set<String> excludedMethods;
-	private UrlPattern urlPattern;
+	private PathPattern urlPattern;
 
 	public Route() {
 		staticParameterValues = NO_PARAMETER_VALUES;
@@ -44,7 +44,7 @@ public class Route {
 		this.name = name;
 	}
 
-	public void setUrlPattern(UrlPattern urlPattern) {
+	public void setUrlPattern(PathPattern urlPattern) {
 		this.urlPattern = urlPattern;
 	}
 
@@ -187,10 +187,10 @@ public class Route {
 	}
 
 	public String buildUrl(Map<String, Object> parameters, Map<String, String> contextParameters) {
-		return urlPattern.buildUrl(parameters, staticParameterValues, contextParameters);
+		return urlPattern.buildPath(parameters, staticParameterValues, contextParameters);
 	}
 
-	public UrlPattern getUrlPattern() {
+	public PathPattern getUrlPattern() {
 		return urlPattern;
 	}
 }
