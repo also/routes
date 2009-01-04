@@ -35,14 +35,14 @@ public class UrlPatternTest {
 		PathPattern pattern;
 		Map<String, String> match;
 
-		pattern = noParameters.appendStatic("/appended").createPathPattern(NO_PARAMETER_NAMES, NO_PARAMETER_VALUES);
+		pattern = new PathPatternBuilder(noParameters).appendStatic("/appended").createPathPattern(NO_PARAMETER_NAMES, NO_PARAMETER_VALUES);
 		match = pattern.match("noParameters/appended");
 		// the pattern should have matched
 		assertNotNull(match);
 		// with no parameters
 		assertEquals(match.size(), 0);
 
-		pattern = simplePatternAfter.appendStatic("/after").createPathPattern(NO_PARAMETER_NAMES, NO_PARAMETER_VALUES);
+		pattern = new PathPatternBuilder(simplePatternAfter).appendStatic("/after").createPathPattern(NO_PARAMETER_NAMES, NO_PARAMETER_VALUES);
 		match = pattern.match("before/value/after");
 		assertNotNull(match);
 		assertEquals(match, Collections.singletonMap("parameter", "value"));
@@ -58,7 +58,7 @@ public class UrlPatternTest {
 		assertNotNull(match);
 		assertEquals(match, Collections.singletonMap("parameter", "value"));
 
-		pattern = simplePatternAfter.appendStatic("/").appendParameter("parameter2").createPathPattern(NO_PARAMETER_NAMES, NO_PARAMETER_VALUES);
+		pattern = new PathPatternBuilder(simplePatternAfter).appendStatic("/").appendParameter("parameter2").createPathPattern(NO_PARAMETER_NAMES, NO_PARAMETER_VALUES);
 		match = pattern.match("before/value/value2");
 		assertNotNull(match);
 	}

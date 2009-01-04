@@ -37,51 +37,41 @@ public class PathPatternBuilder implements Cloneable {
 		return result;
 	}
 
-	/** Returns a new PathPatternBuilder with the pattern appended to it.
+	/** Appends a pattern.
 	 */
 	public PathPatternBuilder append(String pattern) {
-		PathPatternBuilder result = clone();
-		PathPatternBuilder.parse(result, pattern);
-		return result;
+		PathPatternBuilder.parse(this, pattern);
+		return this;
 	}
 
-	/** Returns a new PathPatternBuilder with the static path segment appended to it.
+	/** Appends a path segment.
 	 */
 	public PathPatternBuilder appendStatic(String pathSegment) {
-		StaticSegmentBuilder segment = new StaticSegmentBuilder(pathSegment, true);
-		return appended(segment);
+		return append(new StaticSegmentBuilder(pathSegment, true));
 	}
 
-	/** Returns a new PathPatternBuilder with the parameter appended to it.
-	 *  The parameter is required and does not allow slashes.
+	/** Appends a parameter.
+	 *  The parameter does not allow slashes.
 	 */
 	public PathPatternBuilder appendParameter(String parameterName) {
 		return appendParameter(parameterName, false);
 	}
 
-	/** Returns a new PathPatternBuilder with the parameter appended to it.
+	/** Appends a parameter.
 	 */
 	public PathPatternBuilder appendParameter(String parameterName, boolean allowSlashes) {
-		ParameterSegmentBuilder parameter = new ParameterSegmentBuilder(parameterName, allowSlashes);
-		return appended(parameter);
-	}
-
-	/** Returns a new PathPatternBuilder with the PathSegmentBuilder appended.
-	 */
-	private PathPatternBuilder appended(PathSegmentBuilder pathSegment) {
-		PathPatternBuilder result = clone();
-		result.append(pathSegment);
-		return result;
+		return append(new ParameterSegmentBuilder(parameterName, allowSlashes));
 	}
 
 	/** Appends a PathSegmentBuilder.
 	 */
-	private void append(PathSegmentBuilder pathSegment) {
+	private PathPatternBuilder append(PathSegmentBuilder pathSegment) {
 		pathSegmentBuilders.add(pathSegment.clone());
 		if (pathSegment instanceof ParameterSegmentBuilder) {
 			ParameterSegmentBuilder parameter = (ParameterSegmentBuilder) pathSegment;
 			parameterNames.add(parameter.name);
 		}
+		return this;
 	}
 
 	@SuppressWarnings("unchecked")

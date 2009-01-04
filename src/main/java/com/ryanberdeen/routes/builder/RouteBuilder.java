@@ -139,7 +139,7 @@ public class RouteBuilder implements RouteOptions, Cloneable {
 	}
 
 	public RouteBuilder append(String pattern) {
-		pathPatternBuilder = pathPatternBuilder.append(pattern);
+		pathPatternBuilder.append(pattern);
 		return this;
 	}
 
