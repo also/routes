@@ -129,7 +129,7 @@ public class RouteBuilder implements RouteOptions, Cloneable {
 		return this;
 	}
 
-	String getName() {
+	private String getName() {
 		String result = name;
 		if (name != null) {
 			result = namePrefix + result;
@@ -150,11 +150,6 @@ public class RouteBuilder implements RouteOptions, Cloneable {
 
 	public RouteBuilder setDefaultStaticParameterValue(String name, String value) {
 		defaultStaticParameterValues.put(name, value);
-		return this;
-	}
-
-	public RouteBuilder setDefaultStaticParameterValues(HashMap<String, String> defaultStaticParameterValues) {
-		this.defaultStaticParameterValues = defaultStaticParameterValues;
 		return this;
 	}
 

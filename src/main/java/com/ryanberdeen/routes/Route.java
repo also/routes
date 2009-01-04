@@ -118,8 +118,8 @@ public class Route {
 	}
 
 	/** Matches the URL and request against the route. The URL must match the
-	 * URL pattern, and the request {@link HttpServletRequest#getMethod() method}
-	 * must be included an allowed and not excluded method.
+	 * URL pattern, and the request method must be included an allowed and not
+	 * excluded method.
 	 */
 	public Map<String, String> match(String url, String method) {
 		if (methods != null && !methods.contains(method)) {

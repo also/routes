@@ -155,15 +155,26 @@ public class RouteSet implements HttpServletRequestMapping {
 	public void prepare() throws Exception {
 		// process route names
 		namedRoutes = new HashMap<String, Route>();
-		for (Route route : this.routes) {
+		for (Route route : routes) {
 			String name = route.getName();
 			if (name != null) {
 				namedRoutes.put(name, route);
 			}
 		}
 
-		for (Route route : this.routes) {
+		for (Route route : routes) {
 			route.prepare();
 		}
+	}
+
+	@Override
+	public String toString() {
+		StringBuilder builder = new StringBuilder(super.toString());
+		for (Route route : routes) {
+			builder.append('\n');
+			builder.append(" * " + route.getUrlPattern().getRegex());
+		}
+
+		return builder.toString();
 	}
 }

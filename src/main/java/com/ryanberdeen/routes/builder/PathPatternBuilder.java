@@ -120,14 +120,11 @@ public class PathPatternBuilder implements Cloneable {
 		return new PathPattern(pathSegments, parameterNames);
 	}
 
-	/** Parses a String into a path pattern.
+	/** Parses a String into a path pattern builder.
 	 *
-	 * Parameters whose name is contained in <code>optionalParameterNames</code>
-	 * will not be required for paths to match.
 	 * @param pattern describes the format of matching paths
-	 * @param optionalParameterNames parameter names that are not required
-	 * @param parameterRegexes the regular expressions to use for the parameter values
-	 * @return a {@link PathPatternBuilder} that will match paths to the pattern
+	 * @return a {@link PathPatternBuilder} that will create a
+	 *         {@link PathPattern} to match paths to the pattern
 	 */
 	public static PathPatternBuilder parse(String pattern) {
 		PathPatternBuilder builder = new PathPatternBuilder();
