@@ -1,6 +1,7 @@
 package com.ryanberdeen.routes.path;
 
 import java.util.Map;
+import java.util.regex.Matcher;
 
 
 public interface PathSegment {
@@ -15,4 +16,13 @@ public interface PathSegment {
 	/** Appends the template that represents this segment to the builder.
 	 */
 	public void appendTemplate(StringBuilder templateBuilder);
+
+	/**
+	 * Consumes groups matched in the path regular expression.
+	 * @param matcher the matcher that matched the path
+	 * @param group the index of the first group this segment may consume
+	 * @param parameters the parameters resulting from the path match
+	 * @return the number of groups consumed
+	 */
+	public int consumeMatch(Matcher matcher, int group, Map<String, String> parameters);
 }

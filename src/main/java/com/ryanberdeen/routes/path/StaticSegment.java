@@ -1,6 +1,7 @@
 package com.ryanberdeen.routes.path;
 
 import java.util.Map;
+import java.util.regex.Matcher;
 
 
 public class StaticSegment implements PathSegment, Cloneable {
@@ -28,5 +29,9 @@ public class StaticSegment implements PathSegment, Cloneable {
 
 	public void appendTemplate(StringBuilder templateBuilder) {
 		templateBuilder.append(value);
+	}
+
+	public int consumeMatch(Matcher matcher, int group, Map<String, String> parameters) {
+		return 0;
 	}
 }

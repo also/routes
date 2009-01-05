@@ -99,14 +99,7 @@ public class PathPattern {
 
 			int matchNumber = 1;
 			for (PathSegment segment : pathSegments) {
-				if (segment instanceof ParameterSegment) {
-					ParameterSegment parameter = (ParameterSegment) segment;
-					String value = matcher.group(matchNumber++);
-
-					if (!value.equals("")) {
-						result.put(parameter.getName(), value);
-					}
-				}
+				matchNumber += segment.consumeMatch(matcher, matchNumber, result);
 			}
 		}
 

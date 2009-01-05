@@ -1,7 +1,7 @@
 package com.ryanberdeen.routes.path;
 
 import java.util.Map;
-
+import java.util.regex.Matcher;
 
 public class ParameterSegment implements PathSegment, Cloneable {
 	static final String VALUE_WITHOUT_SLASHES = "[^/]+";
@@ -63,5 +63,14 @@ public class ParameterSegment implements PathSegment, Cloneable {
 		templateBuilder.append("${");
 		templateBuilder.append(name);
 		templateBuilder.append("}");
+	}
+
+	public int consumeMatch(Matcher matcher, int group, Map<String, String> parameters) {
+		String value = matcher.group(group);
+
+		if (!value.equals("")) {
+			parameters.put(getName(), value);
+		}
+		return 1;
 	}
 }
