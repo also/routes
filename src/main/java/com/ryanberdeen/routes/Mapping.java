@@ -7,7 +7,7 @@ public interface Mapping {
 
 	public Map<String, Route> getNamedRoutes();
 
-	public UrlMatch getBestMatch(String method, String path);
+	public RequestMatch getBestMatch(String method, String path);
 
 	public Route getBestMatch(Map<String, Object> parameters);
 

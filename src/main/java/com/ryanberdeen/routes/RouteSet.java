@@ -47,13 +47,13 @@ public class RouteSet implements HttpServletRequestMapping {
 		this.contextParameterNames = contextParameterNames;
 	}
 
-	public UrlMatch getBestMatch(String method, String path) {
+	public RequestMatch getBestMatch(String method, String path) {
 		Map<String, String> parameters = null;
 
 		for (Route route: routes) {
 			parameters = route.match(path, method);
 			if (parameters != null) {
-				UrlMatch match = new UrlMatch(route, parameters);
+				RequestMatch match = new RequestMatch(route, parameters);
 				return match;
 			}
 		}
@@ -61,11 +61,11 @@ public class RouteSet implements HttpServletRequestMapping {
 		return null;
 	}
 
-	public UrlMatch getBestMatch(HttpServletRequest request, String path) {
+	public RequestMatch getBestMatch(HttpServletRequest request, String path) {
 		return getBestMatch(request.getMethod(), path);
 	}
 
-	public void setCurrentMatch(HttpServletRequest request, UrlMatch match) {
+	public void setCurrentMatch(HttpServletRequest request, RequestMatch match) {
 		request.setAttribute(MATCHER_ATTRIBUTE_NAME, match.getRoute());
 		request.setAttribute(MATCH_ATTRIBUTE_NAME, match.getParameters());
 

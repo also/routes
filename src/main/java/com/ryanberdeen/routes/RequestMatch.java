@@ -2,11 +2,11 @@ package com.ryanberdeen.routes;
 
 import java.util.Map;
 
-public class UrlMatch {
+public class RequestMatch {
 	private Route route;
 	private Map<String, String> parameters;
 
-	UrlMatch(Route route, Map<String, String> parameters) {
+	RequestMatch(Route route, Map<String, String> parameters) {
 		this.route = route;
 		this.parameters = parameters;
 	}

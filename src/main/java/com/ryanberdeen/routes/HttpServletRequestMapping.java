@@ -13,7 +13,7 @@ public interface HttpServletRequestMapping extends Mapping {
 	/**
 	 * @see Mapping#getBestMatch(String, String)
 	 */
-	public UrlMatch getBestMatch(HttpServletRequest request, String path);
+	public RequestMatch getBestMatch(HttpServletRequest request, String path);
 
 	/**
 	 * @see Mapping#getBestMatch(Map, Map)
