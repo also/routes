@@ -15,12 +15,12 @@ import javax.servlet.http.HttpServletResponse;
  * <p>The route JavaScript allows named routes to be used in JavaScript.</p>
  */
 public class RouteJavascriptGenerator {
-	private HttpServletRequestMapping mapping;
+	private Mapping mapping;
 
 	/**
 	 * Sets the mapping for which JavaScript will be generated.
 	 */
-	public void setMapping(HttpServletRequestMapping mapping) {
+	public void setMapping(Mapping mapping) {
 		this.mapping = mapping;
 	}
 

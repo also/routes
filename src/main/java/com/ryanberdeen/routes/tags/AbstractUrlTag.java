@@ -47,15 +47,18 @@ public abstract class AbstractUrlTag extends SimpleTagSupport implements Dynamic
 		HttpServletRequestMapping mapping = RouteUtils.getMapping(pageContext.getServletContext());
 		
 		if (name != null) {
-			url = mapping.getPath(request, name, parameters, includeContextPath);
+			url = mapping.getPath(RouteUtils.getMatch(request), name, parameters);
 		}
 		else {
-			url = mapping.getPath(request, parameters, includeContextPath);
+			url = mapping.getPath(RouteUtils.getMatch(request), parameters);
 		}
 		
 		if (url == null) {
 			// TODO exception type
 			throw new RuntimeException("No route matches " + parameters);
+		}
+		else if (includeContextPath) {
+			url = request.getContextPath() + url;
 		}
 		
 		return url;
