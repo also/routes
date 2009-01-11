@@ -24,7 +24,6 @@ public class ExtendedParameters {
 	
 	/** Adds the extended parameters to the request using the specified strategy.
 	 */
-	@SuppressWarnings("unchecked")
 	public static final void addExtendedParameter(HttpServletRequest request, Strategy strategy, Map<String, ? extends Object> parameters) {
 		if (parameters.size() > 0) {
 			Map<String, String[]> extendedParameters = getExtendedParameters(request, strategy, true);

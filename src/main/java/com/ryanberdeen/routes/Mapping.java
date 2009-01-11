@@ -1,8 +1,11 @@
 package com.ryanberdeen.routes;
 
+import java.util.Collections;
 import java.util.Map;
 
 public interface Mapping {
+	public Map<String, String> EMPTY_PARAMETERS = Collections.emptyMap();
+
 	public abstract Route getNamedRoute(String name);
 
 	public Map<String, Route> getNamedRoutes();

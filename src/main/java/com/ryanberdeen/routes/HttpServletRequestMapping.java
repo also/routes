@@ -1,14 +1,10 @@
 package com.ryanberdeen.routes;
 
-import java.util.Collections;
 import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 
 public interface HttpServletRequestMapping extends Mapping {
-
-	public Map<String, String> EMPTY_PARAMETERS = Collections.emptyMap();
-
 	/**
 	 * @see Mapping#getBestMatch(String, String)
 	 */

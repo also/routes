@@ -10,7 +10,6 @@ import com.ryanberdeen.routes.path.PathPattern;
 import com.ryanberdeen.routes.path.PathSegment;
 import com.ryanberdeen.routes.path.StaticSegment;
 
-
 public class PathPatternBuilder implements Cloneable {
 	private static final char PARAMETER_WITHOUT_SLASHES_PREFIX = ':';
 	private static final char PARAMETER_WITH_SLASHES_PREFIX = '*';
@@ -149,8 +148,6 @@ public class PathPatternBuilder implements Cloneable {
 					builder.addParameterName(segmentBuilder, nameBuilder, allowSlashes);
 					segmentBuilder = new StringBuilder();
 					nameBuilder = null;
-
-					//
 					--i;
 				}
 			}
@@ -241,7 +238,7 @@ public class PathPatternBuilder implements Cloneable {
 
 	private static class ParameterSegmentBuilder implements PathSegmentBuilder {
 		boolean allowSlashes;
-		String name;
+		private String name;
 
 		ParameterSegmentBuilder(String name, boolean allowSlashes) {
 			this.name = name;

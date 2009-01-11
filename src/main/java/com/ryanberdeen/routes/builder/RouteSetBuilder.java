@@ -18,7 +18,7 @@ public class RouteSetBuilder implements RouteListBuilder, RouteOptions {
 		routeDefinition = new RouteBuilder();
 	}
 
-	private RouteSetBuilder(RouteSetBuilder that) {
+	public RouteSetBuilder(RouteSetBuilder that) {
 		templates = new HashMap<String, RouteSetBuilderTemplate>(that.templates);
 		routeDefinition = new RouteBuilder(that.routeDefinition);
 	}
@@ -46,8 +46,16 @@ public class RouteSetBuilder implements RouteListBuilder, RouteOptions {
 		return this;
 	}
 
-	public RouteBuilder apply(Map<String, String> applyParameters) {
-		return match().apply(applyParameters);
+	public RouteBuilder apply(RouteBuilder routeBuilder) {
+		return match().apply(routeBuilder);
+	}
+
+	public RouteBuilder apply(Map<String, String> parameterValues) {
+		RouteBuilder routeBuilder = new RouteBuilder();
+		for (Map.Entry<String, String> parameter : parameterValues.entrySet()) {
+			routeBuilder.setParameterValue(parameter.getKey(), parameter.getValue());
+		}
+		return apply(routeBuilder);
 	}
 
 	public RouteSet createRouteSet() {
@@ -115,17 +123,5 @@ class SingleRouteDefinition implements RouteListBuilder {
 
 	public void buildRouteList(List<Route> routes) {
 		routes.add(routeDefinition.createRoute());
-	}
-}
-
-class SingleRoute implements RouteListBuilder {
-	private Route route;
-
-	public SingleRoute(Route route) {
-		this.route = route;
-	}
-
-	public void buildRouteList(List<Route> routes) {
-		routes.add(route);
 	}
 }

@@ -2,7 +2,6 @@ package com.ryanberdeen.routes.builder;
 
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Map;
 
 import com.ryanberdeen.routes.Route;
 
@@ -13,8 +12,7 @@ public class RouteBuilder implements RouteOptions, Cloneable {
 	private static final String METHODS = "methods";
 	private static final String EXCLUDED_METHODS = "excludedMethods";
 
-	@Deprecated
-	public HashMap<String, String> parameterValues;
+	private HashMap<String, String> parameterValues;
 	private HashMap<String, String> defaultStaticParameterValues;
 	private HashMap<String, String> parameterRegexes;
 
@@ -43,7 +41,7 @@ public class RouteBuilder implements RouteOptions, Cloneable {
 		excludedMethods = new HashSet<String>();
 	}
 
-	RouteBuilder(RouteBuilder that) {
+	public RouteBuilder(RouteBuilder that) {
 		parameterValues = new HashMap<String, String>(that.parameterValues);
 		defaultStaticParameterValues = new HashMap<String, String>(that.defaultStaticParameterValues);
 		parameterRegexes = new HashMap<String, String>(that.parameterRegexes);
@@ -158,9 +156,9 @@ public class RouteBuilder implements RouteOptions, Cloneable {
 		return this;
 	}
 
-	public RouteBuilder apply(Map<String, String> applyParameters) {
-		pathPatternBuilder = pathPatternBuilder.apply(applyParameters, parameterValues);
-		parameterValues.putAll(applyParameters);
+	public RouteBuilder apply(RouteBuilder routeBuilder) {
+		pathPatternBuilder = pathPatternBuilder.apply(routeBuilder.parameterValues, parameterValues);
+		parameterValues.putAll(routeBuilder.parameterValues);
 		return this;
 	}
 }

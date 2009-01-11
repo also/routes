@@ -63,7 +63,7 @@ public class MutableRequestWrapper extends HttpServletRequestWrapper {
 	}
 
 	@Override
-	public Map getParameterMap() {
+	public Map<?, ?> getParameterMap() {
 		if (extendedParameters != null) {
 			if (sharableParameterMap == null) {
 				sharableParameterMap = new ShareableParameterMap();
@@ -83,7 +83,7 @@ public class MutableRequestWrapper extends HttpServletRequestWrapper {
 	}
 
 	@Override
-	public Enumeration getParameterNames() {
+	public Enumeration<?> getParameterNames() {
 		if (extendedParameters != null) {
 			return Collections.enumeration(extendedParameters.keySet());
 		}
