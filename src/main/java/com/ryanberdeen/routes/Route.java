@@ -6,7 +6,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
-import com.ryanberdeen.routes.builder.PathPatternBuilder;
 import com.ryanberdeen.routes.path.PathPattern;
 
 public class Route {
@@ -31,21 +30,6 @@ public class Route {
 	public Route() {
 		staticParameterValues = NO_PARAMETER_VALUES;
 		defaultStaticParameterValues = NO_PARAMETER_VALUES;
-	}
-
-	/**
-	 * Creates a new unnamed route.
-	 * @param pattern the pattern the route will match
-	 * @param staticParameters the parameters that will be applied
-	 */
-	public Route(String pattern, Map<String, String> staticParameters, Map<String, String> parameterRegexes) {
-		this(PathPatternBuilder.parse(pattern), staticParameters, parameterRegexes);
-	}
-
-	public Route(PathPatternBuilder pathPatternBuilder, Map<String, String> staticParameters, Map<String, String> parameterRegexes) {
-		this();
-		this.pathPattern = pathPatternBuilder.createPathPattern(staticParameters.keySet(), parameterRegexes);
-		this.staticParameterValues = staticParameters;
 	}
 
 	public void setName(String name) {

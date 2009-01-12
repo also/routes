@@ -8,6 +8,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import com.ryanberdeen.routes.Route;
+import com.ryanberdeen.routes.builder.RouteBuilderUtils;
 
 import static org.junit.Assert.*;
 
@@ -19,7 +20,7 @@ public class RouteTest {
 		HashMap<String, String> simpleParameters = new HashMap<String, String>();
 		simpleParameters.put("controller", "instructorLecture");
 		simpleParameters.put("action", "show");
-		simple = new Route("/instructor/lectures/:id/:action", simpleParameters, Route.NO_PARAMETER_VALUES);
+		simple = RouteBuilderUtils.buildRoute("/instructor/lectures/:id/:action", simpleParameters);
 		simple.prepare();
 	}
 
@@ -78,7 +79,7 @@ public class RouteTest {
 		HashMap<String, String> parameters = new HashMap<String, String>();
 		parameters.put("controller", "lecture");
 		parameters.put("action", "index");
-		Route route = new Route("/lecture", parameters, null);
+		Route route = RouteBuilderUtils.buildRoute("/lecture", parameters);
 		route.setDefaultStaticParameters(Collections.singletonMap("action", "index"));
 		route.prepare();
 		int match = route.match(Collections.singletonMap("controller", (Object) "lecture"), Route.NO_PARAMETER_VALUES);

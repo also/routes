@@ -109,7 +109,7 @@ public class RouteSet implements HttpServletRequestMapping {
 
 	private static String buildPath(Route route, Map<String, Object> parameters, Map<String, String> contextParameters) {
 		// FIXME query string
-		return route.buildUrl(parameters, contextParameters);
+		return route.buildPath(parameters, contextParameters);
 	}
 
 	public Map<String, Route> getNamedRoutes() {
@@ -136,7 +136,7 @@ public class RouteSet implements HttpServletRequestMapping {
 		StringBuilder builder = new StringBuilder(super.toString());
 		for (Route route : routes) {
 			builder.append('\n');
-			builder.append(" * " + route.getUrlPattern().getRegex());
+			builder.append(" * " + route.getPathPattern().getRegex());
 		}
 
 		return builder.toString();

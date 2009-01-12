@@ -49,7 +49,7 @@ public class RouteJavascriptGenerator {
 			writer.write(entry.getKey());
 			writer.write("':'");
 			writer.write(request.getContextPath());
-			writer.write(entry.getValue().getUrlPattern().getStringTemplate());
+			writer.write(entry.getValue().getPathPattern().getStringTemplate());
 			writer.write('\'');
 
 		}

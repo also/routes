@@ -2,8 +2,10 @@ package com.ryanberdeen.routes.builder;
 
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 
 import com.ryanberdeen.routes.Route;
+import com.ryanberdeen.routes.path.PathPattern;
 
 public class RouteBuilder implements RouteOptions, Cloneable {
 	private static final String NAME = "name";
@@ -56,8 +58,11 @@ public class RouteBuilder implements RouteOptions, Cloneable {
 		excludedMethods = new HashSet<String>(that.excludedMethods);
 	}
 
-	Route createRoute() {
-		Route route = new Route(pathPatternBuilder, parameterValues, parameterRegexes);
+	public Route createRoute() {
+		PathPattern pathPattern = pathPatternBuilder.createPathPattern(parameterValues.keySet(), parameterRegexes);
+		Route route = new Route();
+		route.setPathPattern(pathPattern);
+		route.setStaticParameters(parameterValues);
 		route.setDefaultStaticParameters(defaultStaticParameterValues);
 		route.setName(getName());
 		route.setMethods(getMethods());
@@ -146,13 +151,28 @@ public class RouteBuilder implements RouteOptions, Cloneable {
 		return this;
 	}
 
+	public RouteBuilder setParameterValues(Map<String, String> parameterValues) {
+		this.parameterValues.putAll(parameterValues);
+		return this;
+	}
+
 	public RouteBuilder setDefaultStaticParameterValue(String name, String value) {
 		defaultStaticParameterValues.put(name, value);
 		return this;
 	}
 
+	public RouteBuilder setDefaultStaticParameterValues(Map<String, String> defaultStaticParameterValues) {
+		this.defaultStaticParameterValues.putAll(defaultStaticParameterValues);
+		return this;
+	}
+
 	public RouteBuilder setParameterRegex(String name, String regex) {
 		parameterRegexes.put(name, regex);
+		return this;
+	}
+
+	public RouteBuilder setParameterRegexes(Map<String, String> parameterRegexes) {
+		this.parameterRegexes.putAll(parameterRegexes);
 		return this;
 	}
 
